@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="peek_emittable_appwidget_error">Widget unavailable</string>
+</resources>

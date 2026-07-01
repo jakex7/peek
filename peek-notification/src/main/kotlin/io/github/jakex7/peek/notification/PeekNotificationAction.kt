@@ -1,0 +1,88 @@
+package io.github.jakex7.peek.notification
+
+import android.app.PendingIntent
+import android.content.Intent
+import android.os.Bundle
+import androidx.annotation.DrawableRes
+import androidx.core.app.NotificationCompat
+import androidx.core.app.RemoteInput
+
+data class PeekNotificationAction(
+  @param:DrawableRes val iconResId: Int,
+  val title: CharSequence,
+  val pendingIntent: PendingIntent,
+  val remoteInputs: List<PeekNotificationRemoteInput> = emptyList(),
+  val allowGeneratedReplies: Boolean = true,
+  @param:NotificationCompat.Action.SemanticAction val semanticAction: Int =
+    NotificationCompat.Action.SEMANTIC_ACTION_NONE,
+  val showsUserInterface: Boolean = true,
+  val authenticationRequired: Boolean = false,
+  val extras: Bundle = Bundle(),
+)
+
+data class PeekNotificationRemoteInput(
+  val resultKey: String,
+  val label: CharSequence,
+  val choices: List<CharSequence> = emptyList(),
+  val allowFreeFormInput: Boolean = true,
+  val allowedDataTypes: Set<String> = emptySet(),
+  val extras: Bundle = Bundle(),
+) {
+  companion object {
+    fun getResultsFromIntent(intent: Intent): Bundle? =
+      RemoteInput.getResultsFromIntent(intent)
+
+    fun addResultsToIntent(
+      remoteInputs: List<PeekNotificationRemoteInput>,
+      intent: Intent,
+      results: Bundle,
+    ) {
+      RemoteInput.addResultsToIntent(
+        remoteInputs.map { it.toCompatRemoteInput() }.toTypedArray(),
+        intent,
+        results,
+      )
+    }
+  }
+}
+
+fun NotificationCompat.Builder.addPeekAction(action: PeekNotificationAction): NotificationCompat.Builder =
+  addAction(action.toCompatAction())
+
+fun NotificationCompat.Builder.addPeekActions(
+  actions: Iterable<PeekNotificationAction>,
+): NotificationCompat.Builder =
+  apply {
+    actions.forEach { addPeekAction(it) }
+  }
+
+internal fun PeekNotificationAction.toCompatAction(): NotificationCompat.Action {
+  val builder =
+    NotificationCompat.Action.Builder(
+      iconResId,
+      title,
+      pendingIntent,
+    )
+  remoteInputs.forEach { builder.addRemoteInput(it.toCompatRemoteInput()) }
+  builder.setAllowGeneratedReplies(allowGeneratedReplies)
+  builder.setSemanticAction(semanticAction)
+  builder.setShowsUserInterface(showsUserInterface)
+  builder.setAuthenticationRequired(authenticationRequired)
+  builder.addExtras(extras)
+  return builder.build()
+}
+
+internal fun PeekNotificationRemoteInput.toCompatRemoteInput(): RemoteInput {
+  val builder =
+    RemoteInput.Builder(resultKey)
+      .setLabel(label)
+      .setAllowFreeFormInput(allowFreeFormInput)
+      .addExtras(extras)
+  if (choices.isNotEmpty()) {
+    builder.setChoices(choices.toTypedArray())
+  }
+  allowedDataTypes.forEach { mimeType ->
+    builder.setAllowDataType(mimeType, true)
+  }
+  return builder.build()
+}

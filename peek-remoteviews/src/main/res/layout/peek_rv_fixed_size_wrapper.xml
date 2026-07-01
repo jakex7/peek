@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/peek_main"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:id="@+id/peek_size"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="invisible" />
+
+    <FrameLayout
+        android:id="@+id/peek_children"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_alignBottom="@id/peek_size"
+        android:layout_alignLeft="@id/peek_size"
+        android:layout_alignRight="@id/peek_size"
+        android:layout_alignTop="@id/peek_size" />
+</RelativeLayout>
