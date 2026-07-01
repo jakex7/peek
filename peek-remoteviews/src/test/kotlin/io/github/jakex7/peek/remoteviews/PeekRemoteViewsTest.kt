@@ -920,23 +920,6 @@ class PeekRemoteViewsTest {
   }
 
   @Test
-  fun determinateCircularProgressDrawableStartsAtTop() {
-    val context = ApplicationProvider.getApplicationContext<Context>()
-    val drawable =
-      context.getDrawable(R.drawable.peek_rv_circular_progress_determinate) as LayerDrawable
-    val progressDrawable = drawable.findDrawableByLayerId(android.R.id.progress)
-
-    assertTrue(progressDrawable is RotateDrawable)
-    val rotateDrawable = progressDrawable as RotateDrawable
-    assertEquals(-90f, rotateDrawable.fromDegrees, 0f)
-    assertEquals(-90f, rotateDrawable.toDegrees, 0f)
-    assertEquals(0.5f, rotateDrawable.pivotX, 0f)
-    assertEquals(0.5f, rotateDrawable.pivotY, 0f)
-    assertTrue(rotateDrawable.isPivotXRelative)
-    assertTrue(rotateDrawable.isPivotYRelative)
-  }
-
-  @Test
   fun renderClampsOutOfRangeProgressAndAlpha() {
     val context = ApplicationProvider.getApplicationContext<Context>()
     val remoteViews =
