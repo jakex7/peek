@@ -10,7 +10,6 @@ import android.util.Log
 import androidx.annotation.CallSuper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
@@ -23,8 +22,6 @@ abstract class PeekAppWidgetReceiver : AppWidgetProvider() {
   }
 
   abstract val peekAppWidget: PeekAppWidget
-
-  open val coroutineContext: CoroutineContext = Dispatchers.Default
 
   @CallSuper
   override fun onUpdate(
@@ -80,16 +77,15 @@ abstract class PeekAppWidgetReceiver : AppWidgetProvider() {
     }
   }
 
-  private fun goAsync(block: suspend CoroutineScope.() -> Unit) {
+  private fun goAsync(
+    coroutineContext: CoroutineContext = Dispatchers.Default,
+    block: suspend CoroutineScope.() -> Unit
+  ) {
     val pendingResult = goAsync()
-    CoroutineScope(SupervisorJob() + coroutineContext).launch {
-      try {
-        block()
-      } catch (throwable: Throwable) {
-        Log.e(TAG, "Error while updating Peek app widget.", throwable)
-      } finally {
-        pendingResult.finish()
-      }
+    CoroutineScope(coroutineContext).launch {
+      runCatching { block() }
+        .onFailure { Log.e(TAG, "Error while calling peek", it) }
+      pendingResult.finish()
     }
   }
 }

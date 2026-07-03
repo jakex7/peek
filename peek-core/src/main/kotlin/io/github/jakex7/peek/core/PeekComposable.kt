@@ -2,8 +2,8 @@ package io.github.jakex7.peek.core
 
 import androidx.compose.runtime.ComposableTargetMarker
 
-@Retention(AnnotationRetention.BINARY)
 @ComposableTargetMarker(description = "Peek Composable")
+@Retention(AnnotationRetention.BINARY)
 @Target(
   AnnotationTarget.FILE,
   AnnotationTarget.FUNCTION,

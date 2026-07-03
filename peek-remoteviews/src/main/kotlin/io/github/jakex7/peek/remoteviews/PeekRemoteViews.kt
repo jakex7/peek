@@ -100,9 +100,8 @@ object PeekRemoteViews {
 }
 
 private val PeekNotificationSize.surfaceDescription: String
-  get() =
-    when (this) {
-      PeekNotificationSize.Collapsed -> "collapsed notification RemoteViews"
-      PeekNotificationSize.Expanded -> "expanded notification RemoteViews"
-      PeekNotificationSize.HeadsUp -> "heads-up notification RemoteViews"
-    }
+  get() = when (this) {
+    PeekNotificationSize.Collapsed -> "collapsed notification RemoteViews"
+    PeekNotificationSize.Expanded -> "expanded notification RemoteViews"
+    PeekNotificationSize.HeadsUp -> "heads-up notification RemoteViews"
+  }
