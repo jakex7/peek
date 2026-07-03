@@ -916,7 +916,7 @@ internal class RemoteViewsTranslator(
     }
 
     return SpannableString(text).apply {
-      val setDefaultSpan: (Any) -> Unit = { what ->
+      val setDefaultSpan = { what: Any ->
         setSpan(
           what,
           0,
