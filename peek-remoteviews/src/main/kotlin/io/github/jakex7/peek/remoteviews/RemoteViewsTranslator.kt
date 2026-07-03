@@ -4,7 +4,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Typeface
-import android.graphics.drawable.Icon as AndroidIcon
 import android.os.Build
 import android.text.SpannableString
 import android.text.Spanned
@@ -25,6 +24,7 @@ import androidx.compose.ui.unit.isSpecified
 import io.github.jakex7.peek.core.Alignment
 import io.github.jakex7.peek.core.BackgroundModifier
 import io.github.jakex7.peek.core.ClickActionModifier
+import io.github.jakex7.peek.core.ColorProvider
 import io.github.jakex7.peek.core.ContentScale
 import io.github.jakex7.peek.core.Dimension
 import io.github.jakex7.peek.core.DividerOrientation
@@ -50,11 +50,11 @@ import io.github.jakex7.peek.core.TextDecoration
 import io.github.jakex7.peek.core.Visibility
 import io.github.jakex7.peek.core.VisibilityModifier
 import io.github.jakex7.peek.core.WidthModifier
-import io.github.jakex7.peek.core.find
 import io.github.jakex7.peek.core.controls.EmittableCheckBox
 import io.github.jakex7.peek.core.controls.EmittableCompoundButton
 import io.github.jakex7.peek.core.controls.EmittableRadioButton
 import io.github.jakex7.peek.core.controls.EmittableSwitch
+import io.github.jakex7.peek.core.find
 import io.github.jakex7.peek.core.image.EmittableImage
 import io.github.jakex7.peek.core.layout.EmittableBox
 import io.github.jakex7.peek.core.layout.EmittableColumn
@@ -67,11 +67,13 @@ import io.github.jakex7.peek.core.remoteviews.EmittableAndroidRemoteViews
 import io.github.jakex7.peek.core.text.EmittableButton
 import io.github.jakex7.peek.core.text.EmittableText
 import kotlin.math.round
+import android.graphics.drawable.Icon as AndroidIcon
 
 internal class RemoteViewsTranslator(
   private val context: Context,
   private val surfaceDescription: String,
-  @LayoutRes private val rootLayoutId: Int = R.layout.peek_rv_root,
+  @param:LayoutRes
+  private val rootLayoutId: Int = R.layout.peek_rv_root,
 ) {
   private var nextGeneratedViewId = FIRST_GENERATED_VIEW_ID
 
@@ -91,6 +93,7 @@ internal class RemoteViewsTranslator(
       is EmittableSpacer -> remoteViews(R.layout.peek_rv_spacer).apply {
         remoteViews.applyModifiers(node.modifier, mainViewId)
       }
+
       is EmittableDivider -> translateDivider(node)
       is EmittableText -> translateText(node)
       is EmittableButton -> translateButton(node)
@@ -108,12 +111,11 @@ internal class RemoteViewsTranslator(
     // Leaves that fill an axis through a dedicated match-parent layout below API 31 must not be
     // re-wrapped by the fixed-size wrapper, which would otherwise force the fill axis back to
     // wrap-content (see translateDivider / textLayoutId).
-    val sized =
-      if (node.usesFillLayoutPre31()) {
-        translated
-      } else {
-        translated.wrapFixedSizeIfNeeded(node.modifier)
-      }
+    val sized = if (node.usesFillLayoutPre31()) {
+      translated
+    } else {
+      translated.wrapFixedSizeIfNeeded(node.modifier)
+    }
     return sized.wrapMinimumSizeIfNeeded(node.modifier)
   }
 
@@ -160,12 +162,11 @@ internal class RemoteViewsTranslator(
     }
 
   private fun translateRow(node: EmittableRow): TranslatedRemoteViews {
-    val layouts =
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && node.modifier.isSelectableGroup()) {
-        RadioRowLayouts
-      } else {
-        RowLayouts
-      }
+    val layouts = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && node.modifier.isSelectableGroup()) {
+      RadioRowLayouts
+    } else {
+      RowLayouts
+    }
     return translateContainer(layouts.layoutFor(node.modifier), node).apply {
       toGravityOrNull(node.horizontalAlignment, node.verticalAlignment)?.let { gravity ->
         remoteViews.setInt(mainViewId, "setGravity", gravity)
@@ -175,12 +176,11 @@ internal class RemoteViewsTranslator(
   }
 
   private fun translateColumn(node: EmittableColumn): TranslatedRemoteViews {
-    val layouts =
-      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && node.modifier.isSelectableGroup()) {
-        RadioColumnLayouts
-      } else {
-        ColumnLayouts
-      }
+    val layouts = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && node.modifier.isSelectableGroup()) {
+      RadioColumnLayouts
+    } else {
+      ColumnLayouts
+    }
     return translateContainer(layouts.layoutFor(node.modifier), node).apply {
       toGravityOrNull(node.horizontalAlignment, node.verticalAlignment)?.let { gravity ->
         remoteViews.setInt(mainViewId, "setGravity", gravity)
@@ -239,9 +239,14 @@ internal class RemoteViewsTranslator(
         remoteViews.applyModifiers(node.modifier, mainViewId)
       }
     }
+
     val horizontal = node.orientation == DividerOrientation.Horizontal
-    val layoutId =
-      if (horizontal) R.layout.peek_rv_divider_horizontal else R.layout.peek_rv_divider_vertical
+    val layoutId = if (horizontal) {
+      R.layout.peek_rv_divider_horizontal
+    } else {
+      R.layout.peek_rv_divider_vertical
+    }
+
     return remoteViews(layoutId).apply {
       node.applyDividerColor(this)
       val thicknessPx = node.thicknessPx()
@@ -257,14 +262,21 @@ internal class RemoteViewsTranslator(
   private fun EmittableDivider.applyDividerColor(translated: TranslatedRemoteViews) {
     val resolvedColor = color.getColor(context)
     if (resolvedColor != Color.Unspecified) {
-      translated.remoteViews.setInt(translated.mainViewId, "setBackgroundColor", resolvedColor.toArgb())
+      translated.remoteViews.setInt(
+        translated.mainViewId,
+        "setBackgroundColor",
+        resolvedColor.toArgb()
+      )
     }
   }
 
   // True when a leaf renders through a dedicated match-parent ("fill") layout below API 31. Such
   // leaves own their sizing and must skip the generic fixed-size wrapper.
   private fun Emittable.usesFillLayoutPre31(): Boolean {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) return false
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+      return false
+    }
+
     return when (this) {
       is EmittableDivider -> fillsMainAxis()
       is EmittableText -> fillsEitherAxis()
@@ -273,24 +285,27 @@ internal class RemoteViewsTranslator(
   }
 
   private fun EmittableDivider.fillsMainAxis(): Boolean {
-    val fillAxis =
-      when (orientation) {
-        DividerOrientation.Horizontal -> modifier.find<WidthModifier>()?.dimension
-        DividerOrientation.Vertical -> modifier.find<HeightModifier>()?.dimension
-      }
+    val fillAxis = when (orientation) {
+      DividerOrientation.Horizontal -> modifier.find<WidthModifier>()?.dimension
+      DividerOrientation.Vertical -> modifier.find<HeightModifier>()?.dimension
+    }
     return fillAxis == Dimension.Fill
   }
 
   private fun Emittable.fillsEitherAxis(): Boolean =
     modifier.find<WidthModifier>()?.dimension == Dimension.Fill ||
-       modifier.find<HeightModifier>()?.dimension == Dimension.Fill
+      modifier.find<HeightModifier>()?.dimension == Dimension.Fill
 
   // Below API 31 there is no runtime layout-size setter, so a filling TextView needs a template
   // whose fill axis is match-parent in XML. API 31+ uses the base template and setViewLayout*.
   private fun textLayoutId(modifier: PeekModifier): Int {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) return R.layout.peek_rv_text
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+      return R.layout.peek_rv_text
+    }
+
     val fillWidth = modifier.find<WidthModifier>()?.dimension == Dimension.Fill
     val fillHeight = modifier.find<HeightModifier>()?.dimension == Dimension.Fill
+
     return when {
       fillWidth && fillHeight -> R.layout.peek_rv_text_fill_size
       fillWidth -> R.layout.peek_rv_text_fill_width
@@ -300,11 +315,11 @@ internal class RemoteViewsTranslator(
   }
 
   private fun EmittableDivider.thicknessPx(): Int {
-    val thickness =
-      when (orientation) {
-        DividerOrientation.Horizontal -> modifier.find<HeightModifier>()?.dimension
-        DividerOrientation.Vertical -> modifier.find<WidthModifier>()?.dimension
-      } as? Dimension.Fixed
+    val thickness = when (orientation) {
+      DividerOrientation.Horizontal -> modifier.find<HeightModifier>()?.dimension
+      DividerOrientation.Vertical -> modifier.find<WidthModifier>()?.dimension
+    } as? Dimension.Fixed
+
     return (thickness?.value ?: 1.dp).toPx()
   }
 
@@ -566,7 +581,10 @@ internal class RemoteViewsTranslator(
     modifier: PeekModifier,
     viewId: Int,
   ) {
-    if (Build.VERSION.SDK_INT >= 31) return
+    if (Build.VERSION.SDK_INT >= 31) {
+      return
+    }
+
     val width = modifier.find<WidthModifier>()?.dimension
     val height = modifier.find<HeightModifier>()?.dimension
     if (width is Dimension.Fixed) {
@@ -639,17 +657,22 @@ internal class RemoteViewsTranslator(
   private fun TranslatedRemoteViews.wrapFixedSizeIfNeeded(
     modifier: PeekModifier,
   ): TranslatedRemoteViews {
-    if (Build.VERSION.SDK_INT >= 31) return this
+    if (Build.VERSION.SDK_INT >= 31) {
+      return this
+    }
+
     val width = modifier.find<WidthModifier>()?.dimension as? Dimension.Fixed
     val height = modifier.find<HeightModifier>()?.dimension as? Dimension.Fixed
-    if (width == null && height == null) return this
+    if (width == null && height == null) {
+      return this
+    }
 
-    val wrapperLayout =
-      when {
-        width != null && height != null -> R.layout.peek_rv_fixed_size_wrapper
-        width != null -> R.layout.peek_rv_fixed_width_wrapper
-        else -> R.layout.peek_rv_fixed_height_wrapper
-      }
+    val wrapperLayout = when {
+      width != null && height != null -> R.layout.peek_rv_fixed_size_wrapper
+      width != null -> R.layout.peek_rv_fixed_width_wrapper
+      else -> R.layout.peek_rv_fixed_height_wrapper
+    }
+
     val wrapped = this
     return TranslatedRemoteViews(
       remoteViews =
@@ -668,7 +691,9 @@ internal class RemoteViewsTranslator(
   ): TranslatedRemoteViews {
     val minWidth = modifier.find<MinWidthModifier>()
     val minHeight = modifier.find<MinHeightModifier>()
-    if (minWidth == null && minHeight == null) return this
+    if (minWidth == null && minHeight == null) {
+      return this
+    }
 
     val wrapped = this
     return TranslatedRemoteViews(
@@ -696,7 +721,10 @@ internal class RemoteViewsTranslator(
     find<SelectableGroupModifier>() != null
 
   private fun checkSelectableGroupChildren(node: EmittableWithChildren) {
-    if (!node.modifier.isSelectableGroup()) return
+    if (!node.modifier.isSelectableGroup()) {
+      return
+    }
+
     check(node.children.count { it is EmittableRadioButton && it.checked } <= 1) {
       "When using PeekModifier.selectableGroup(), no more than one RadioButton may be checked at a time."
     }
@@ -705,7 +733,7 @@ internal class RemoteViewsTranslator(
   @androidx.annotation.RequiresApi(Build.VERSION_CODES.S)
   private fun RemoteViews.setBackgroundTint(
     viewId: Int,
-    color: io.github.jakex7.peek.core.ColorProvider,
+    color: ColorProvider,
   ) {
     val resolvedColor = color.getColor(context)
     if (resolvedColor != Color.Unspecified) {
@@ -721,7 +749,7 @@ internal class RemoteViewsTranslator(
   @androidx.annotation.RequiresApi(Build.VERSION_CODES.S)
   private fun RemoteViews.setProgressTint(
     viewId: Int,
-    color: io.github.jakex7.peek.core.ColorProvider,
+    color: ColorProvider,
   ) {
     val resolvedColor = color.getColor(context)
     if (resolvedColor != Color.Unspecified) {
@@ -737,7 +765,7 @@ internal class RemoteViewsTranslator(
   @androidx.annotation.RequiresApi(Build.VERSION_CODES.S)
   private fun RemoteViews.setProgressBackgroundTint(
     viewId: Int,
-    color: io.github.jakex7.peek.core.ColorProvider,
+    color: ColorProvider,
   ) {
     val resolvedColor = color.getColor(context)
     if (resolvedColor != Color.Unspecified) {
@@ -753,7 +781,7 @@ internal class RemoteViewsTranslator(
   @androidx.annotation.RequiresApi(Build.VERSION_CODES.S)
   private fun RemoteViews.setIndeterminateTint(
     viewId: Int,
-    color: io.github.jakex7.peek.core.ColorProvider,
+    color: ColorProvider,
   ) {
     val resolvedColor = color.getColor(context)
     if (resolvedColor != Color.Unspecified) {
@@ -849,17 +877,25 @@ internal class RemoteViewsTranslator(
 
   private fun EmittableImage.shouldAdjustViewBounds(): Boolean =
     contentScale == ContentScale.Fit &&
-       (
-         modifier.find<WidthModifier>()?.dimension == Dimension.Wrap ||
-            modifier.find<HeightModifier>()?.dimension == Dimension.Wrap
-       )
+      (
+        modifier.find<WidthModifier>()?.dimension == Dimension.Wrap ||
+          modifier.find<HeightModifier>()?.dimension == Dimension.Wrap
+        )
 
   private fun ContentScale.toImageLayoutId(isDecorative: Boolean): Int =
     when (this) {
       ContentScale.Crop ->
-        if (isDecorative) R.layout.peek_rv_image_crop_decorative else R.layout.peek_rv_image_crop
+        if (isDecorative) {
+          R.layout.peek_rv_image_crop_decorative
+        } else {
+          R.layout.peek_rv_image_crop
+        }
+
       ContentScale.Fit ->
-        if (isDecorative) R.layout.peek_rv_image_fit_decorative else R.layout.peek_rv_image_fit
+        if (isDecorative) {
+          R.layout.peek_rv_image_fit_decorative
+        } else R.layout.peek_rv_image_fit
+
       ContentScale.FillBounds ->
         if (isDecorative) {
           R.layout.peek_rv_image_fill_bounds_decorative
@@ -869,20 +905,34 @@ internal class RemoteViewsTranslator(
     }
 
   private fun EmittableText.styledText(): CharSequence {
-    if (text.isEmpty()) return text
+    if (text.isEmpty()) {
+      return text
+    }
+
     val style = toTypefaceStyle(fontWeight, fontStyle)
     val decoration = textDecoration
-    if (style == Typeface.NORMAL && decoration == TextDecoration.None) return text
+    if (style == Typeface.NORMAL && decoration == TextDecoration.None) {
+      return text
+    }
 
     return SpannableString(text).apply {
+      val setDefaultSpan: (Any) -> Unit = { what ->
+        setSpan(
+          what,
+          0,
+          length,
+          Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+      }
+
       if (style != Typeface.NORMAL) {
-        setSpan(StyleSpan(style), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        setDefaultSpan(StyleSpan(style))
       }
       if (decoration.underline) {
-        setSpan(UnderlineSpan(), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        setDefaultSpan(UnderlineSpan())
       }
       if (decoration.lineThrough) {
-        setSpan(StrikethroughSpan(), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        setDefaultSpan(StrikethroughSpan())
       }
     }
   }

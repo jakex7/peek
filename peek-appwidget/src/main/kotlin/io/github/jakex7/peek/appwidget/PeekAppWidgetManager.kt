@@ -32,12 +32,18 @@ class PeekAppWidgetManager(
   }
 
   fun getPeekAppWidgetIdBy(configurationIntent: Intent): PeekAppWidgetId? {
-    val appWidgetId =
-      configurationIntent.extras?.getInt(
+    val appWidgetId = configurationIntent
+      .extras
+      ?.getInt(
         AppWidgetManager.EXTRA_APPWIDGET_ID,
         AppWidgetManager.INVALID_APPWIDGET_ID,
       ) ?: AppWidgetManager.INVALID_APPWIDGET_ID
-    return if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) null else PeekAppWidgetId(appWidgetId)
+
+    return if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
+      null
+    } else {
+      PeekAppWidgetId(appWidgetId)
+    }
   }
 
   fun getAppWidgetSizes(id: PeekAppWidgetId): List<DpSize> =
@@ -50,12 +56,17 @@ class PeekAppWidgetManager(
     preview: RemoteViews? = null,
     successCallback: PendingIntent? = null,
   ): Boolean {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false
-    if (!AppWidgetManagerApi26Impl.isRequestPinAppWidgetSupported(appWidgetManager)) return false
-    val extras =
-      preview?.let {
-        Bundle().apply { putParcelable(AppWidgetManager.EXTRA_APPWIDGET_PREVIEW, it) }
-      }
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+      return false
+    }
+
+    if (!AppWidgetManagerApi26Impl.isRequestPinAppWidgetSupported(appWidgetManager)) {
+      return false
+    }
+
+    val extras = Bundle()
+    preview?.let { extras.putParcelable(AppWidgetManager.EXTRA_APPWIDGET_PREVIEW, it) }
+
     return AppWidgetManagerApi26Impl.requestPinAppWidget(
       appWidgetManager,
       ComponentName(context, receiver),

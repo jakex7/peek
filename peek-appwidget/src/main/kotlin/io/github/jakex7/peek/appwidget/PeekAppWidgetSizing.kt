@@ -9,8 +9,8 @@ import android.os.Bundle
 import android.util.DisplayMetrics
 import android.util.SizeF
 import android.widget.RemoteViews
-import androidx.annotation.RestrictTo
 import androidx.annotation.RequiresApi
+import androidx.annotation.RestrictTo
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import kotlin.math.ceil
@@ -30,6 +30,7 @@ fun resolvePeekAppWidgetSizes(
       } else {
         options.extractOrientationSizes().ifEmpty { listOf(minSize) }
       }
+
     is PeekAppWidgetSizeMode.Responsive ->
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         sizeMode.sizes.sortedBySize()
@@ -46,6 +47,7 @@ fun resolvePeekAppWidgetSizes(
 @SuppressLint("PrimitiveInCollection", "ListIterator")
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 fun Bundle.extractAllSizes(minSize: () -> DpSize): List<DpSize> {
+  // TODO(@jakex7): Field requires API level 31 (current min is 23): android.appwidget.AppWidgetManager#OPTION_APPWIDGET_SIZES
   val sizes = getParcelableArrayList<SizeF>(AppWidgetManager.OPTION_APPWIDGET_SIZES)
   return if (sizes.isNullOrEmpty()) {
     estimateSizes(minSize)
@@ -60,6 +62,7 @@ private fun Bundle.estimateSizes(minSize: () -> DpSize): List<DpSize> {
   val maxHeight = getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
   val minWidth = getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0)
   val maxWidth = getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 0)
+
   if (minHeight == 0 || maxHeight == 0 || minWidth == 0 || maxWidth == 0) {
     return listOf(minSize())
   }
@@ -69,37 +72,37 @@ private fun Bundle.estimateSizes(minSize: () -> DpSize): List<DpSize> {
 private fun Bundle.extractLandscapeSize(): DpSize? {
   val minHeight = getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0)
   val maxWidth = getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 0)
-  return if (minHeight == 0 || maxWidth == 0) null else DpSize(maxWidth.dp, minHeight.dp)
+
+  if (minHeight == 0 || maxWidth == 0) {
+    return null
+  }
+  return DpSize(maxWidth.dp, minHeight.dp)
 }
 
 private fun Bundle.extractPortraitSize(): DpSize? {
   val maxHeight = getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
   val minWidth = getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0)
-  return if (maxHeight == 0 || minWidth == 0) null else DpSize(minWidth.dp, maxHeight.dp)
+
+  if (maxHeight == 0 || minWidth == 0) {
+    return null
+  }
+  return DpSize(minWidth.dp, maxHeight.dp)
 }
 
 internal fun Bundle.extractOrientationSizes(): List<DpSize> =
   listOfNotNull(extractLandscapeSize(), extractPortraitSize())
 
 internal fun AppWidgetProviderInfo.getMinSize(displayMetrics: DisplayMetrics): DpSize {
-  val resolvedMinWidth =
-    min(
-      minWidth,
-      if (resizeMode and AppWidgetProviderInfo.RESIZE_HORIZONTAL != 0) {
-        minResizeWidth
-      } else {
-        Int.MAX_VALUE
-      },
-    )
-  val resolvedMinHeight =
-    min(
-      minHeight,
-      if (resizeMode and AppWidgetProviderInfo.RESIZE_VERTICAL != 0) {
-        minResizeHeight
-      } else {
-        Int.MAX_VALUE
-      },
-    )
+  val minResizeWidth = minResizeWidth
+    .takeIf { resizeMode and AppWidgetProviderInfo.RESIZE_HORIZONTAL != 0 }
+    ?: Int.MAX_VALUE
+
+  val minResizeHeight = minResizeHeight
+    .takeIf { resizeMode and AppWidgetProviderInfo.RESIZE_VERTICAL != 0 }
+    ?: Int.MAX_VALUE
+
+  val resolvedMinWidth = min(minWidth, minResizeWidth)
+  val resolvedMinHeight = min(minHeight, minResizeHeight)
   return DpSize(
     resolvedMinWidth.pixelsToDp(displayMetrics).dp,
     resolvedMinHeight.pixelsToDp(displayMetrics).dp,
@@ -127,16 +130,25 @@ fun combineRemoteViewsBySize(
   sizeMode: PeekAppWidgetSizeMode,
 ): RemoteViews {
   require(views.isNotEmpty()) { "At least one widget RemoteViews is required." }
-  if (sizeMode == PeekAppWidgetSizeMode.Single) return views.single().second
+
+  if (sizeMode == PeekAppWidgetSizeMode.Single) {
+    return views.single().second
+  }
+
   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
     return RemoteViewsApi31Impl.createRemoteViews(
       views.associate { (size, remoteViews) -> size.toSizeF() to remoteViews },
     )
   }
+
   require(views.size <= 2) {
     "Pre-Android 12 widgets support at most landscape and portrait RemoteViews."
   }
-  return if (views.size == 1) views.single().second else RemoteViews(views[0].second, views[1].second)
+  return if (views.size == 1) {
+    views.single().second
+  } else {
+    RemoteViews(views[0].second, views[1].second)
+  }
 }
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -145,15 +157,18 @@ fun AppWidgetManager.getWidgetMinSize(
   id: PeekAppWidgetId,
   options: Bundle,
 ): DpSize {
-  val providerMinSize =
-    getAppWidgetInfo(id.appWidgetId)?.getMinSize(context.resources.displayMetrics)
-  if (providerMinSize != null && providerMinSize != DpSize.Zero) return providerMinSize
+  val providerMinSize = getAppWidgetInfo(id.appWidgetId)
+    ?.getMinSize(context.resources.displayMetrics)
+
+  if (providerMinSize != null && providerMinSize != DpSize.Zero) {
+    return providerMinSize
+  }
   return options.extractAllSizes { DpSize.Zero }.firstOrNull() ?: DpSize.Zero
 }
 
 private infix fun DpSize.fitsIn(other: DpSize): Boolean =
   (ceil(other.width.value) + 1 > width.value) &&
-     (ceil(other.height.value) + 1 > height.value)
+    (ceil(other.height.value) + 1 > height.value)
 
 private fun squareDistance(widgetSize: DpSize, layoutSize: DpSize): Float {
   val dw = widgetSize.width.value - layoutSize.width.value

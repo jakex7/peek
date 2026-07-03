@@ -14,7 +14,8 @@ import io.github.jakex7.peek.core.PeekComposable
 import io.github.jakex7.peek.remoteviews.PeekRemoteViews
 
 abstract class PeekAppWidget(
-  @param:LayoutRes private val errorUiLayout: Int = R.layout.peek_appwidget_error,
+  @param:LayoutRes
+  private val errorUiLayout: Int = R.layout.peek_appwidget_error,
 ) {
   open val sizeMode: PeekAppWidgetSizeMode = PeekAppWidgetSizeMode.Single
 

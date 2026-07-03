@@ -24,7 +24,9 @@ object PeekTreeNormalizer {
     }
 
   private fun coerceToSingleRootChild(root: PeekRoot) {
-    if (root.children.size <= 1) return
+    if (root.children.size <= 1) {
+      return
+    }
 
     // The notification root hosts a single child. Stack multiple top-level siblings in a Column so
     // they flow vertically; a Box (FrameLayout) would overlap them on top of each other.
@@ -36,7 +38,9 @@ object PeekTreeNormalizer {
 
   private fun normalizeChildren(parent: EmittableWithChildren) {
     parent.children.forEach { child ->
-      if (child is EmittableWithChildren) normalizeChildren(child)
+      if (child is EmittableWithChildren) {
+        normalizeChildren(child)
+      }
     }
     collapseRedundantFillBoxes(parent)
     parent.modifier = normalizeFillFromChildren(parent.modifier, parent.children)
@@ -53,8 +57,12 @@ object PeekTreeNormalizer {
   private fun EmittableBox.collapseRedundantFillBoxChild() {
     while (true) {
       val childBox = children.singleOrNull() as? EmittableBox ?: return
-      if (contentAlignment != childBox.contentAlignment) return
-      if (!childBox.modifier.isOnlyFillMaxSize()) return
+      if (contentAlignment != childBox.contentAlignment) {
+        return
+      }
+      if (!childBox.modifier.isOnlyFillMaxSize()) {
+        return
+      }
 
       children.clear()
       children += childBox.children

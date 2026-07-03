@@ -11,7 +11,8 @@ import io.github.jakex7.peek.appwidget.PeekAppWidget
 import io.github.jakex7.peek.appwidget.PeekAppWidgetId
 
 abstract class PeekEmittableAppWidget(
-  @param:LayoutRes private val errorUiLayout: Int = R.layout.peek_emittable_appwidget_error,
+  @param:LayoutRes
+  private val errorUiLayout: Int = R.layout.peek_emittable_appwidget_error,
 ) : PeekAppWidget(errorUiLayout) {
 
   abstract suspend fun provideRoot(
@@ -48,8 +49,16 @@ abstract class PeekEmittableAppWidget(
     throwable: Throwable,
   ) {
     Log.e("PeekEmittableAppWidget", "Error while rendering app widget.", throwable)
-    if (errorUiLayout == 0) throw throwable
-    AppWidgetManager.getInstance(context)
-      .updateAppWidget(id.appWidgetId, RemoteViews(context.packageName, errorUiLayout))
+    if (errorUiLayout == 0) {
+      throw throwable
+    }
+
+    val removeView = RemoteViews(
+      context.packageName,
+      errorUiLayout
+    )
+    AppWidgetManager
+      .getInstance(context)
+      .updateAppWidget(id.appWidgetId, removeView)
   }
 }
