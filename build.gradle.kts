@@ -1,9 +1,6 @@
 import com.vanniktech.maven.publish.AndroidSingleVariantLibrary
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import com.vanniktech.maven.publish.SonatypeHost
-import org.gradle.api.publish.PublishingExtension
-import org.gradle.api.publish.maven.MavenPublication
-import org.gradle.jvm.tasks.Jar
 
 plugins {
   alias(libs.plugins.android.application) apply false
@@ -22,10 +19,6 @@ subprojects {
 
 subprojects {
   plugins.withId("com.vanniktech.maven.publish") {
-    val emptyJavadocJar = tasks.register<Jar>("emptyJavadocJar") {
-      archiveClassifier.set("javadoc")
-    }
-
     extensions.configure<MavenPublishBaseExtension> {
       configure(AndroidSingleVariantLibrary(
         variant = "release",
@@ -63,14 +56,6 @@ subprojects {
           url = "https://github.com/jakex7/peek"
           connection = "scm:git:git://github.com/jakex7/peek.git"
           developerConnection = "scm:git:ssh://git@github.com/jakex7/peek.git"
-        }
-      }
-    }
-
-    plugins.withId("maven-publish") {
-      extensions.configure<PublishingExtension> {
-        publications.withType<MavenPublication>().configureEach {
-          artifact(emptyJavadocJar)
         }
       }
     }
