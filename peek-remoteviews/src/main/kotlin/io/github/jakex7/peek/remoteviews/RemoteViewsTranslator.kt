@@ -89,10 +89,7 @@ internal class RemoteViewsTranslator(
       is EmittableBox -> translateBox(node)
       is EmittableRow -> translateRow(node)
       is EmittableColumn -> translateColumn(node)
-      is EmittableSpacer -> remoteViews(R.layout.peek_rv_spacer).apply {
-        remoteViews.applyModifiers(node.modifier, mainViewId)
-      }
-
+      is EmittableSpacer -> translateSpacer(node)
       is EmittableDivider -> translateDivider(node)
       is EmittableText -> translateText(node)
       is EmittableButton -> translateButton(node)
@@ -107,10 +104,12 @@ internal class RemoteViewsTranslator(
         "Unsupported Peek node for $surfaceDescription: ${node::class.qualifiedName}",
       )
     }
-    // Leaves that fill an axis through a dedicated match-parent layout below API 31 must not be
-    // re-wrapped by the fixed-size wrapper, which would otherwise force the fill axis back to
-    // wrap-content (see translateDivider / textLayoutId).
-    val sized = if (node.usesFillLayoutPre31()) {
+    // Leaves that fill an axis through a dedicated match-parent layout below API 31 handle any
+    // fixed cross axis themselves (TextView.setWidth/setHeight), so re-wrapping them in the
+    // fixed-size wrapper would only force the fill axis back to wrap-content. Images are the
+    // exception: they also use fill layouts, but ImageView has no remotable size setter, so a
+    // fixed cross axis still goes through the wrapper (in its fill-passthrough variant).
+    val sized = if (node.usesFillLayoutPre31() && node !is EmittableImage) {
       translated
     } else {
       translated.wrapFixedSizeIfNeeded(node.modifier)
@@ -227,6 +226,38 @@ internal class RemoteViewsTranslator(
       remoteViews.applyTextViewMinimumSizeModifiers(node.modifier, mainViewId)
     }
 
+  private fun translateSpacer(node: EmittableSpacer): TranslatedRemoteViews {
+    // API 31+ resolves fill dimensions through setViewLayout*. Below 31 a filling spacer needs a
+    // template whose fill axis is match-parent in XML (like dividers), with any non-fill axis
+    // sized through TextView.setWidth/setHeight to keep the template's 1dp default.
+    if (!node.usesFillLayoutPre31()) {
+      return remoteViews(R.layout.peek_rv_spacer).apply {
+        remoteViews.applyModifiers(node.modifier, mainViewId)
+      }
+    }
+
+    val fillWidth = node.modifier.find<WidthModifier>()?.dimension == Dimension.Fill
+    val fillHeight = node.modifier.find<HeightModifier>()?.dimension == Dimension.Fill
+    val layoutId = when {
+      fillWidth && fillHeight -> R.layout.peek_rv_spacer_fill_size
+      fillWidth -> R.layout.peek_rv_spacer_fill_width
+      else -> R.layout.peek_rv_spacer_fill_height
+    }
+
+    return remoteViews(layoutId).apply {
+      if (!fillWidth) {
+        remoteViews.setInt(mainViewId, "setWidth", node.spacerAxisSizePx { find<WidthModifier>()?.dimension })
+      }
+      if (!fillHeight) {
+        remoteViews.setInt(mainViewId, "setHeight", node.spacerAxisSizePx { find<HeightModifier>()?.dimension })
+      }
+      remoteViews.applyModifiers(node.modifier, mainViewId)
+    }
+  }
+
+  private fun EmittableSpacer.spacerAxisSizePx(dimension: PeekModifier.() -> Dimension?): Int =
+    ((modifier.dimension() as? Dimension.Fixed)?.value ?: DEFAULT_SPACER_SIZE).toPx()
+
   private fun translateDivider(node: EmittableDivider): TranslatedRemoteViews {
     // API 31+ resolves fill/fixed dimensions through setViewLayout*, so the plain FrameLayout
     // template works for every orientation. Below 31 there is no runtime layout-size setter, so a
@@ -279,6 +310,8 @@ internal class RemoteViewsTranslator(
     return when (this) {
       is EmittableDivider -> fillsMainAxis()
       is EmittableText -> fillsEitherAxis()
+      is EmittableSpacer -> fillsEitherAxis()
+      is EmittableImage -> fillsEitherAxis()
       else -> false
     }
   }
@@ -344,7 +377,7 @@ internal class RemoteViewsTranslator(
     }
 
   private fun translateImage(node: EmittableImage): TranslatedRemoteViews =
-    remoteViews(node.contentScale.toImageLayoutId(isDecorative = node.isDecorative())).apply {
+    remoteViews(node.imageLayoutId()).apply {
       when (val provider = node.provider) {
         is ImageProvider.Resource -> remoteViews.setImageViewResource(mainViewId, provider.resId)
         is ImageProvider.BitmapImage -> remoteViews.setImageViewBitmap(mainViewId, provider.bitmap)
@@ -667,16 +700,31 @@ internal class RemoteViewsTranslator(
       return this
     }
 
-    val width = modifier.find<WidthModifier>()?.dimension as? Dimension.Fixed
-    val height = modifier.find<HeightModifier>()?.dimension as? Dimension.Fixed
+    val widthDimension = modifier.find<WidthModifier>()?.dimension
+    val heightDimension = modifier.find<HeightModifier>()?.dimension
+    val width = widthDimension as? Dimension.Fixed
+    val height = heightDimension as? Dimension.Fixed
     if (width == null && height == null) {
       return this
     }
 
+    // When the other axis fills, use a wrapper whose fill axis is match-parent so the wrapped
+    // fill layout (or fill container template) is not forced back to wrap-content.
     val wrapperLayout = when {
       width != null && height != null -> R.layout.peek_rv_fixed_size_wrapper
-      width != null -> R.layout.peek_rv_fixed_width_wrapper
-      else -> R.layout.peek_rv_fixed_height_wrapper
+      width != null ->
+        if (heightDimension == Dimension.Fill) {
+          R.layout.peek_rv_fixed_width_wrapper_fill_height
+        } else {
+          R.layout.peek_rv_fixed_width_wrapper
+        }
+
+      else ->
+        if (widthDimension == Dimension.Fill) {
+          R.layout.peek_rv_fixed_height_wrapper_fill_width
+        } else {
+          R.layout.peek_rv_fixed_height_wrapper
+        }
     }
 
     val wrapped = this
@@ -888,26 +936,33 @@ internal class RemoteViewsTranslator(
           modifier.find<HeightModifier>()?.dimension == Dimension.Wrap
         )
 
-  private fun ContentScale.toImageLayoutId(isDecorative: Boolean): Int =
+  // Below API 31 a filling image needs a template whose fill axis is match-parent in XML;
+  // API 31+ uses the base template and setViewLayout*.
+  private fun EmittableImage.imageLayoutId(): Int {
+    val layouts = contentScale.toImageLayouts(isDecorative = isDecorative())
+    if (!usesFillLayoutPre31()) {
+      return layouts.wrap
+    }
+
+    val fillWidth = modifier.find<WidthModifier>()?.dimension == Dimension.Fill
+    val fillHeight = modifier.find<HeightModifier>()?.dimension == Dimension.Fill
+    return when {
+      fillWidth && fillHeight -> layouts.fillSize
+      fillWidth -> layouts.fillWidth
+      else -> layouts.fillHeight
+    }
+  }
+
+  private fun ContentScale.toImageLayouts(isDecorative: Boolean): ContainerLayouts =
     when (this) {
       ContentScale.Crop ->
-        if (isDecorative) {
-          R.layout.peek_rv_image_crop_decorative
-        } else {
-          R.layout.peek_rv_image_crop
-        }
+        if (isDecorative) ImageCropDecorativeLayouts else ImageCropLayouts
 
       ContentScale.Fit ->
-        if (isDecorative) {
-          R.layout.peek_rv_image_fit_decorative
-        } else R.layout.peek_rv_image_fit
+        if (isDecorative) ImageFitDecorativeLayouts else ImageFitLayouts
 
       ContentScale.FillBounds ->
-        if (isDecorative) {
-          R.layout.peek_rv_image_fill_bounds_decorative
-        } else {
-          R.layout.peek_rv_image_fill_bounds
-        }
+        if (isDecorative) ImageFillBoundsDecorativeLayouts else ImageFillBoundsLayouts
     }
 
   private fun EmittableText.styledText(): CharSequence {
@@ -957,6 +1012,7 @@ internal class RemoteViewsTranslator(
   private companion object {
     const val PROGRESS_MAX = 100
     const val FIRST_GENERATED_VIEW_ID = 1
+    val DEFAULT_SPACER_SIZE = 1.dp
 
     val RowLayouts = ContainerLayouts(
       wrap = R.layout.peek_rv_row,
@@ -993,6 +1049,42 @@ internal class RemoteViewsTranslator(
       fillWidth = R.layout.peek_rv_box_aligned_child_fill_width,
       fillHeight = R.layout.peek_rv_box_aligned_child_fill_height,
       fillSize = R.layout.peek_rv_box_aligned_child_fill_size,
+    )
+    val ImageCropLayouts = ContainerLayouts(
+      wrap = R.layout.peek_rv_image_crop,
+      fillWidth = R.layout.peek_rv_image_crop_fill_width,
+      fillHeight = R.layout.peek_rv_image_crop_fill_height,
+      fillSize = R.layout.peek_rv_image_crop_fill_size,
+    )
+    val ImageCropDecorativeLayouts = ContainerLayouts(
+      wrap = R.layout.peek_rv_image_crop_decorative,
+      fillWidth = R.layout.peek_rv_image_crop_decorative_fill_width,
+      fillHeight = R.layout.peek_rv_image_crop_decorative_fill_height,
+      fillSize = R.layout.peek_rv_image_crop_decorative_fill_size,
+    )
+    val ImageFitLayouts = ContainerLayouts(
+      wrap = R.layout.peek_rv_image_fit,
+      fillWidth = R.layout.peek_rv_image_fit_fill_width,
+      fillHeight = R.layout.peek_rv_image_fit_fill_height,
+      fillSize = R.layout.peek_rv_image_fit_fill_size,
+    )
+    val ImageFitDecorativeLayouts = ContainerLayouts(
+      wrap = R.layout.peek_rv_image_fit_decorative,
+      fillWidth = R.layout.peek_rv_image_fit_decorative_fill_width,
+      fillHeight = R.layout.peek_rv_image_fit_decorative_fill_height,
+      fillSize = R.layout.peek_rv_image_fit_decorative_fill_size,
+    )
+    val ImageFillBoundsLayouts = ContainerLayouts(
+      wrap = R.layout.peek_rv_image_fill_bounds,
+      fillWidth = R.layout.peek_rv_image_fill_bounds_fill_width,
+      fillHeight = R.layout.peek_rv_image_fill_bounds_fill_height,
+      fillSize = R.layout.peek_rv_image_fill_bounds_fill_size,
+    )
+    val ImageFillBoundsDecorativeLayouts = ContainerLayouts(
+      wrap = R.layout.peek_rv_image_fill_bounds_decorative,
+      fillWidth = R.layout.peek_rv_image_fill_bounds_decorative_fill_width,
+      fillHeight = R.layout.peek_rv_image_fill_bounds_decorative_fill_height,
+      fillSize = R.layout.peek_rv_image_fill_bounds_decorative_fill_size,
     )
   }
 }

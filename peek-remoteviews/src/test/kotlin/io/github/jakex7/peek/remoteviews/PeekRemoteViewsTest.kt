@@ -1380,6 +1380,107 @@ class PeekRemoteViewsPreAndroid12Test {
   }
 
   @Test
+  fun renderFillsSpacerWidthBeforeAndroid12() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val remoteViews =
+      renderBlocking(context, PeekNotificationSize.Collapsed) {
+        Column(modifier = PeekModifier.fillMaxWidth()) {
+          Text("One")
+          Spacer(modifier = PeekModifier.fillMaxWidth())
+        }
+      }
+
+    val applied = remoteViews.apply(context, FrameLayout(context))
+    val spacer = applied.findText("")
+
+    assertNotNull(spacer)
+    assertEquals(ViewGroup.LayoutParams.MATCH_PARENT, spacer?.layoutParams?.width)
+  }
+
+  @Test
+  fun renderFillsSpacerHeightAndKeepsFixedWidthBeforeAndroid12() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val remoteViews =
+      renderBlocking(context, PeekNotificationSize.Collapsed) {
+        Row {
+          Text("One")
+          Spacer(modifier = PeekModifier.fillMaxHeight().width(8.dp))
+          Text("Two")
+        }
+      }
+
+    val applied = remoteViews.apply(context, FrameLayout(context))
+    val spacer = applied.findText("")
+
+    assertNotNull(spacer)
+    assertEquals(ViewGroup.LayoutParams.MATCH_PARENT, spacer?.layoutParams?.height)
+    assertEquals(8.dp.toPx(context), spacer?.minWidth)
+  }
+
+  @Test
+  fun renderFillsImageWidthBeforeAndroid12() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val remoteViews =
+      renderBlocking(context, PeekNotificationSize.Collapsed) {
+        Image(
+          provider = ImageProvider(android.R.drawable.stat_sys_upload),
+          contentDescription = "Upload",
+          modifier = PeekModifier.fillMaxWidth(),
+        )
+      }
+
+    val applied = remoteViews.apply(context, FrameLayout(context))
+    val image = applied.findFirstImageView()
+
+    assertNotNull(image)
+    assertEquals(ViewGroup.LayoutParams.MATCH_PARENT, image?.layoutParams?.width)
+  }
+
+  @Test
+  fun renderFillsImageWidthWithFixedHeightBeforeAndroid12() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val remoteViews =
+      renderBlocking(context, PeekNotificationSize.Collapsed) {
+        Image(
+          provider = ImageProvider(android.R.drawable.stat_sys_upload),
+          contentDescription = "Upload",
+          modifier = PeekModifier.fillMaxWidth().height(48.dp),
+        )
+      }
+
+    val applied = remoteViews.apply(context, FrameLayout(context))
+    val image = applied.findFirstImageView()
+    val sizeViewId = context.resources.getIdentifier("peek_size", "id", context.packageName)
+    val sizeView = applied.findViewById<TextView>(sizeViewId)
+
+    assertNotNull(image)
+    assertEquals(ViewGroup.LayoutParams.MATCH_PARENT, image?.layoutParams?.width)
+    assertNotNull(sizeView)
+    assertEquals(48.dp.toPx(context), sizeView?.minHeight)
+  }
+
+  @Test
+  fun renderFillsRowWidthWithFixedHeightBeforeAndroid12() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val remoteViews =
+      renderBlocking(context, PeekNotificationSize.Collapsed) {
+        Row(modifier = PeekModifier.fillMaxWidth().height(20.dp)) {
+          Text("One")
+        }
+      }
+
+    val applied = remoteViews.apply(context, FrameLayout(context))
+    val row = applied.findFirstLinearLayout()
+    val sizeViewId = context.resources.getIdentifier("peek_size", "id", context.packageName)
+    val sizeView = applied.findViewById<TextView>(sizeViewId)
+
+    assertNotNull(row)
+    assertEquals(ViewGroup.LayoutParams.MATCH_PARENT, row?.layoutParams?.width)
+    assertNotNull(sizeView)
+    assertEquals(20.dp.toPx(context), sizeView?.minHeight)
+  }
+
+  @Test
   fun renderUsesStaticCheckBoxBackportBeforeAndroid12() {
     val context = ApplicationProvider.getApplicationContext<Context>()
     val remoteViews =
