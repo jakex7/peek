@@ -8,6 +8,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.annotation.CallSuper
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -83,9 +84,15 @@ abstract class PeekAppWidgetReceiver : AppWidgetProvider() {
   ) {
     val pendingResult = goAsync()
     CoroutineScope(coroutineContext).launch {
-      runCatching { block() }
-        .onFailure { Log.e(TAG, "Error while calling peek", it) }
-      pendingResult.finish()
+      try {
+        block()
+      } catch (cancellation: CancellationException) {
+        throw cancellation
+      } catch (throwable: Throwable) {
+        Log.e(TAG, "Error while calling peek", throwable)
+      } finally {
+        pendingResult.finish()
+      }
     }
   }
 }

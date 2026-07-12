@@ -101,6 +101,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import java.util.Locale
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [31])
@@ -944,6 +945,25 @@ class PeekRemoteViewsTest {
   }
 
   @Test
+  fun renderResolvesStartEndPaddingAgainstRtlLayoutDirection() {
+    val context = ApplicationProvider.getApplicationContext<Context>().withRtlLayoutDirection()
+    val remoteViews =
+      renderBlocking(context, PeekNotificationSize.Collapsed) {
+        Text(
+          text = "Padded",
+          modifier = PeekModifier.padding(start = 8.dp, top = 0.dp, end = 2.dp, bottom = 0.dp),
+        )
+      }
+
+    val applied = remoteViews.apply(context, FrameLayout(context))
+    val text = applied.findText("Padded")
+
+    assertNotNull(text)
+    assertEquals(2.dp.toPx(context), text?.paddingLeft)
+    assertEquals(8.dp.toPx(context), text?.paddingRight)
+  }
+
+  @Test
   fun renderAppliesVisibilityModifier() {
     val context = ApplicationProvider.getApplicationContext<Context>()
     val remoteViews =
@@ -1416,6 +1436,14 @@ private fun Context.withNightMode(): Context {
       uiMode =
         (uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or
            Configuration.UI_MODE_NIGHT_YES
+    }
+  return createConfigurationContext(configuration)
+}
+
+private fun Context.withRtlLayoutDirection(): Context {
+  val configuration =
+    Configuration(resources.configuration).apply {
+      setLayoutDirection(Locale("ar"))
     }
   return createConfigurationContext(configuration)
 }

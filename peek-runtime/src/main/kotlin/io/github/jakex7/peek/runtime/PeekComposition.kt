@@ -39,17 +39,18 @@ object PeekComposition {
         val composition = Composition(PeekApplier(root), recomposer)
         val recomposerJob = launch { recomposer.runRecomposeAndApplyChanges() }
 
-        composition.setContent(content)
-        // `setContent` applies the initial composition synchronously, so `root` already
-        // reflects the composed tree here. We then wait for the recomposer to settle so any
-        // effect-driven recomposition is included. We intentionally do not require a non-empty
-        // tree: legitimately empty content (e.g. an empty slot or a false conditional) must
-        // resolve instead of spinning until the timeout and crashing the caller.
-        withTimeout(RENDER_TIMEOUT_MILLIS.milliseconds) {
-          recomposer.currentState.first { it == Recomposer.State.Idle }
-        }
-
         try {
+          composition.setContent(content)
+          // `setContent` applies the initial composition synchronously, so `root` already
+          // reflects the composed tree here. We then wait for the recomposer to settle so any
+          // effect-driven recomposition is included. We intentionally do not require a non-empty
+          // tree: legitimately empty content (e.g. an empty slot or a false conditional) must
+          // resolve instead of spinning until the timeout and crashing the caller.
+          withTimeout(RENDER_TIMEOUT_MILLIS.milliseconds) {
+            recomposer.currentState.first { it == Recomposer.State.Idle }
+          }
+
+          // Normalize before the finally block runs: disposing the composition clears `root`.
           PeekTreeNormalizer.normalize(root)
         } finally {
           composition.dispose()

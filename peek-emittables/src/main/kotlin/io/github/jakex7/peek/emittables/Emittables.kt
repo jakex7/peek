@@ -1,8 +1,11 @@
 package io.github.jakex7.peek.emittables
 
 typealias Alignment = io.github.jakex7.peek.core.Alignment
+typealias ColorFilter = io.github.jakex7.peek.core.ColorFilter
 typealias ColorProvider = io.github.jakex7.peek.core.ColorProvider
+typealias ContentScale = io.github.jakex7.peek.core.ContentScale
 typealias DividerOrientation = io.github.jakex7.peek.core.DividerOrientation
+typealias ImageProvider = io.github.jakex7.peek.core.ImageProvider
 typealias Emittable = io.github.jakex7.peek.core.Emittable
 typealias EmittableWithChildren = io.github.jakex7.peek.core.EmittableWithChildren
 typealias FontStyle = io.github.jakex7.peek.core.FontStyle

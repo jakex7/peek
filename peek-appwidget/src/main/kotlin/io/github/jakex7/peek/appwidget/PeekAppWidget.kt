@@ -12,6 +12,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.unit.DpSize
 import io.github.jakex7.peek.core.PeekComposable
 import io.github.jakex7.peek.remoteviews.PeekRemoteViews
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 
 abstract class PeekAppWidget(
   @param:LayoutRes
@@ -39,6 +41,8 @@ abstract class PeekAppWidget(
     try {
       appWidgetManager.updateAppWidget(id.appWidgetId, composeRemoteViews(context, id, options))
     } catch (throwable: Throwable) {
+      // Rethrow cancellation of the calling scope instead of rendering the error UI for it.
+      currentCoroutineContext().ensureActive()
       onCompositionError(context, id, throwable)
     }
   }

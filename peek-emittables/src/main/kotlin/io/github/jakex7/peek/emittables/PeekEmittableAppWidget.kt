@@ -53,12 +53,12 @@ abstract class PeekEmittableAppWidget(
       throw throwable
     }
 
-    val removeView = RemoteViews(
+    val errorView = RemoteViews(
       context.packageName,
       errorUiLayout
     )
     AppWidgetManager
       .getInstance(context)
-      .updateAppWidget(id.appWidgetId, removeView)
+      .updateAppWidget(id.appWidgetId, errorView)
   }
 }

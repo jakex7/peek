@@ -79,14 +79,13 @@ internal object SampleAppWidget : PeekAppWidget() {
           onClick =
             actionStartActivity(
               Intent(context, MainActivity::class.java)
-//                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
             ),
         )
         if (wide) {
           Spacer(modifier = PeekModifier.width(10.dp))
           Text(
             text = "${size.width.value.toInt()} x ${size.height.value.toInt()} dp",
-//            color = PeekTheme.colors.onPrimary,
             maxLines = 1,
           )
         }

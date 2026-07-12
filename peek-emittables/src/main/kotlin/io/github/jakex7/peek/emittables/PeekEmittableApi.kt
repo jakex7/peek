@@ -2,9 +2,13 @@ package io.github.jakex7.peek.emittables
 
 import android.app.PendingIntent
 import android.content.Intent
+import android.graphics.Bitmap
+import android.net.Uri
+import androidx.annotation.DrawableRes
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import android.graphics.drawable.Icon as AndroidIcon
 import io.github.jakex7.peek.core.actionPendingIntent as coreActionPendingIntent
 import io.github.jakex7.peek.core.actionSendBroadcast as coreActionSendBroadcast
 import io.github.jakex7.peek.core.actionStartActivity as coreActionStartActivity
@@ -16,10 +20,12 @@ import io.github.jakex7.peek.core.fillMaxSize as coreFillMaxSize
 import io.github.jakex7.peek.core.fillMaxWidth as coreFillMaxWidth
 import io.github.jakex7.peek.core.height as coreHeight
 import io.github.jakex7.peek.core.padding as corePadding
+import io.github.jakex7.peek.core.selectableGroup as coreSelectableGroup
 import io.github.jakex7.peek.core.size as coreSize
 import io.github.jakex7.peek.core.then as coreThen
 import io.github.jakex7.peek.core.visibility as coreVisibility
 import io.github.jakex7.peek.core.width as coreWidth
+import io.github.jakex7.peek.core.withAlpha as coreWithAlpha
 import io.github.jakex7.peek.core.wrapContentHeight as coreWrapContentHeight
 import io.github.jakex7.peek.core.wrapContentSize as coreWrapContentSize
 import io.github.jakex7.peek.core.wrapContentWidth as coreWrapContentWidth
@@ -29,6 +35,21 @@ fun ColorProvider(color: Color): ColorProvider =
 
 fun ColorProvider(day: Color, night: Color): ColorProvider =
   io.github.jakex7.peek.core.ColorProvider(day = day, night = night)
+
+fun ColorProvider.withAlpha(alpha: Float): ColorProvider =
+  coreWithAlpha(alpha)
+
+fun ImageProvider(@DrawableRes resId: Int): ImageProvider =
+  io.github.jakex7.peek.core.ImageProvider(resId)
+
+fun ImageProvider(bitmap: Bitmap): ImageProvider =
+  io.github.jakex7.peek.core.ImageProvider(bitmap)
+
+fun ImageProvider(uri: Uri): ImageProvider =
+  io.github.jakex7.peek.core.ImageProvider(uri)
+
+fun ImageProvider(icon: AndroidIcon): ImageProvider =
+  io.github.jakex7.peek.core.ImageProvider(icon)
 
 fun actionPendingIntent(pendingIntent: PendingIntent): PeekAction =
   coreActionPendingIntent(pendingIntent)
@@ -106,3 +127,6 @@ fun PeekModifier.clickable(pendingIntent: PendingIntent): PeekModifier =
 
 fun PeekModifier.clickable(onClick: PeekAction): PeekModifier =
   coreClickable(onClick)
+
+fun PeekModifier.selectableGroup(): PeekModifier =
+  coreSelectableGroup()

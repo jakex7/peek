@@ -67,7 +67,6 @@ import io.github.jakex7.peek.core.remoteviews.EmittableAndroidRemoteViews
 import io.github.jakex7.peek.core.text.EmittableButton
 import io.github.jakex7.peek.core.text.EmittableText
 import kotlin.math.round
-import android.graphics.drawable.Icon as AndroidIcon
 
 internal class RemoteViewsTranslator(
   private val context: Context,
@@ -530,11 +529,18 @@ internal class RemoteViewsTranslator(
   ): RemoteViews =
     apply {
       modifier.find<PaddingModifier>()?.let {
+        // setViewPadding takes physical left/right, so resolve start/end against the layout
+        // direction of the rendering context. A locale change re-renders through
+        // PeekAppWidgetReceiver's ACTION_LOCALE_CHANGED handling.
+        val isRtl =
+          context.resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL
+        val left = if (isRtl) it.end else it.start
+        val right = if (isRtl) it.start else it.end
         setViewPadding(
           viewId,
-          it.start.toPx(),
+          left.toPx(),
           it.top.toPx(),
-          it.end.toPx(),
+          right.toPx(),
           it.bottom.toPx(),
         )
       }
@@ -1049,15 +1055,5 @@ private object RemoteViewsApi31Impl {
     value: ColorStateList,
   ) {
     remoteViews.setColorStateList(viewId, methodName, value)
-  }
-}
-
-private object RemoteViewsApi23Impl {
-  fun setImageViewIcon(
-    remoteViews: RemoteViews,
-    viewId: Int,
-    icon: AndroidIcon,
-  ) {
-    remoteViews.setImageViewIcon(viewId, icon)
   }
 }

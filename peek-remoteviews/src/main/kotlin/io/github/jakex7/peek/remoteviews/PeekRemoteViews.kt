@@ -21,8 +21,10 @@ object PeekRemoteViews {
     context: Context,
     content: @Composable @PeekComposable () -> Unit,
   ): RemoteViews {
+    // PeekComposition.render already returns a normalized root; translate it directly instead of
+    // going through the raw-root overload, which would normalize a second time.
     val root = PeekComposition.render(content)
-    return render(context, root)
+    return hostNeutralTranslator(context).translate(root)
   }
 
   /**
@@ -37,7 +39,7 @@ object PeekRemoteViews {
     content: @Composable @PeekComposable () -> Unit,
   ): RemoteViews {
     val root = PeekComposition.render(content)
-    return renderAppWidget(context, root)
+    return appWidgetTranslator(context).translate(root)
   }
 
   /**
@@ -50,8 +52,7 @@ object PeekRemoteViews {
     context: Context,
     root: PeekRoot,
   ): RemoteViews =
-    RemoteViewsTranslator(context, surfaceDescription = "RemoteViews")
-      .translate(PeekTreeNormalizer.normalize(root))
+    hostNeutralTranslator(context).translate(PeekTreeNormalizer.normalize(root))
 
   /**
    * Translates an already-built [root] into app-widget RemoteViews.
@@ -63,11 +64,7 @@ object PeekRemoteViews {
     context: Context,
     root: PeekRoot,
   ): RemoteViews =
-    RemoteViewsTranslator(
-      context = context,
-      surfaceDescription = "app widget RemoteViews",
-      rootLayoutId = R.layout.peek_rv_root_fill_size,
-    ).translate(PeekTreeNormalizer.normalize(root))
+    appWidgetTranslator(context).translate(PeekTreeNormalizer.normalize(root))
 
   /**
    * Composes [content] and translates it into notification [RemoteViews].
@@ -97,6 +94,16 @@ object PeekRemoteViews {
   ): RemoteViews =
     RemoteViewsTranslator(context, size.surfaceDescription)
       .translate(PeekTreeNormalizer.normalize(root))
+
+  private fun hostNeutralTranslator(context: Context): RemoteViewsTranslator =
+    RemoteViewsTranslator(context, surfaceDescription = "RemoteViews")
+
+  private fun appWidgetTranslator(context: Context): RemoteViewsTranslator =
+    RemoteViewsTranslator(
+      context = context,
+      surfaceDescription = "app widget RemoteViews",
+      rootLayoutId = R.layout.peek_rv_root_fill_size,
+    )
 }
 
 private val PeekNotificationSize.surfaceDescription: String
