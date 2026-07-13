@@ -35,4 +35,5 @@
     <color name="peek_colorSurfaceContainer">#ff211f26</color>
     <color name="peek_colorSurfaceContainerHigh">#ff2b2930</color>
     <color name="peek_colorSurfaceContainerHighest">#ff36343b</color>
+    <color name="peek_colorWidgetBackground">#ff20333d</color>
 </resources>

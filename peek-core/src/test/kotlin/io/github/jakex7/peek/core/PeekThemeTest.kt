@@ -39,6 +39,7 @@ class PeekThemeTest {
     assertEquals(androidColor(context, android.R.color.system_neutral1_800), defaultInverseSurface(context))
     assertEquals(androidColor(context, android.R.color.system_neutral1_50), defaultInverseOnSurface(context))
     assertEquals(androidColor(context, android.R.color.system_accent1_200), defaultInversePrimary(context))
+    assertEquals(androidColor(context, android.R.color.system_accent2_50), defaultWidgetBackground(context))
   }
 
   @Test
@@ -66,6 +67,7 @@ class PeekThemeTest {
     assertEquals(androidColor(context, android.R.color.system_neutral1_100), defaultInverseSurface(context))
     assertEquals(androidColor(context, android.R.color.system_neutral1_800), defaultInverseOnSurface(context))
     assertEquals(androidColor(context, android.R.color.system_accent1_600), defaultInversePrimary(context))
+    assertEquals(androidColor(context, android.R.color.system_accent2_800), defaultWidgetBackground(context))
   }
 
   @Test
@@ -109,6 +111,7 @@ class PeekThemeTest {
       colors.surfaceContainer,
       colors.surfaceContainerHigh,
       colors.surfaceContainerHighest,
+      colors.widgetBackground,
     ).forEach { it.getColor(context) }
   }
 
@@ -174,6 +177,9 @@ class PeekThemeTest {
 
   private fun defaultInversePrimary(context: Context): Int =
     PeekThemeDefaults.colors.inversePrimary.getColor(context).toArgb()
+
+  private fun defaultWidgetBackground(context: Context): Int =
+    PeekThemeDefaults.colors.widgetBackground.getColor(context).toArgb()
 
   private fun androidColor(context: Context, resId: Int): Int =
     Color(context.getColor(resId)).toArgb()

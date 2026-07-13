@@ -43,6 +43,7 @@ data class PeekColors(
   val surfaceContainer: ColorProvider = ResourceColorProvider(R.color.peek_colorSurfaceContainer),
   val surfaceContainerHigh: ColorProvider = ResourceColorProvider(R.color.peek_colorSurfaceContainerHigh),
   val surfaceContainerHighest: ColorProvider = ResourceColorProvider(R.color.peek_colorSurfaceContainerHighest),
+  val widgetBackground: ColorProvider = ResourceColorProvider(R.color.peek_colorWidgetBackground),
 )
 
 object PeekThemeDefaults {
@@ -83,6 +84,7 @@ object PeekThemeDefaults {
       surfaceContainer = ResourceColorProvider(R.color.peek_colorSurfaceContainer),
       surfaceContainerHigh = ResourceColorProvider(R.color.peek_colorSurfaceContainerHigh),
       surfaceContainerHighest = ResourceColorProvider(R.color.peek_colorSurfaceContainerHighest),
+      widgetBackground = ResourceColorProvider(R.color.peek_colorWidgetBackground),
     )
 }
 
@@ -122,6 +124,7 @@ fun peekColors(
   surfaceContainer: ColorProvider = PeekThemeDefaults.colors.surfaceContainer,
   surfaceContainerHigh: ColorProvider = PeekThemeDefaults.colors.surfaceContainerHigh,
   surfaceContainerHighest: ColorProvider = PeekThemeDefaults.colors.surfaceContainerHighest,
+  widgetBackground: ColorProvider = PeekThemeDefaults.colors.widgetBackground,
 ): PeekColors =
   PeekColors(
     primary = primary,
@@ -159,6 +162,7 @@ fun peekColors(
     surfaceContainer = surfaceContainer,
     surfaceContainerHigh = surfaceContainerHigh,
     surfaceContainerHighest = surfaceContainerHighest,
+    widgetBackground = widgetBackground,
   )
 
 object PeekTheme {

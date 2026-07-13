@@ -31,6 +31,7 @@ import io.github.jakex7.peek.core.fillMaxWidth
 import io.github.jakex7.peek.core.height
 import io.github.jakex7.peek.core.padding
 import io.github.jakex7.peek.core.width
+import io.github.jakex7.peek.core.withAlpha
 
 class SampleAppWidgetReceiver : PeekAppWidgetReceiver() {
   override val peekAppWidget: PeekAppWidget
@@ -56,7 +57,7 @@ internal object SampleAppWidget : PeekAppWidget() {
       modifier =
         PeekModifier
           .fillMaxSize()
-          .background(PeekTheme.colors.background)
+          .background(PeekTheme.colors.widgetBackground)
           .padding(12.dp),
     ) {
       Text(
