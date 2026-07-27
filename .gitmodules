@@ -1,0 +1,4 @@
+[submodule "glance-fork/androidx"]
+	path = glance-fork/androidx
+	url = https://github.com/jakex7/androidx.git
+	shallow = true

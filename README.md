@@ -1,15 +1,38 @@
 # Peek
 
-Peek - build layouts for remote surfaces using a Jetpack Compose-style API
+Peek supplies the Glance pieces AndroidX does not yet provide: notification composition and
+extensible custom components that translate to both RemoteViews and RemoteCompose.
 
 ## Modules
 
-- `peek-core`: public DSL, modifiers, and emittable model.
-- `peek-runtime`: Compose Runtime execution and tree normalization.
-- `peek-remoteviews`: `RemoteViews` translation.
-- `peek-notification`: `NotificationCompat.Builder` integration.
-- `peek-appwidget`: App Widget provider.
-- `peek-testing`: Robolectric helpers for applying and inspecting rendered views.
+- `peek-glance` provides custom Glance components.
+- `peek-notification` composes Glance content into `NotificationCompat` custom views.
+- `peek-emittables` inserts prebuilt Glance emittable trees and provides a multiprocess AppWidget
+  adapter for low-level tree producers.
+
+## Glance fork resolver
+
+Peek `0.2.0` is pinned to Glance `1.3.0-alpha02`. Apply the resolver plugin once in the consuming
+Android project:
+
+```kotlin
+plugins {
+  id("io.github.jakex7.peek.glance-fork") version "0.2.0"
+}
+```
+
+Then add Peek dependency:
+
+```kotlin
+dependencies {
+  implementation("io.github.jakex7.peek:peek-notification:0.2.0")
+}
+```
+
+Continue declaring normal `androidx.glance` dependencies. The plugin substitutes only
+`glance-appwidget` with
+`io.github.jakex7.peek.forks:glance-appwidget:1.3.0-alpha02`, including transitive requests from
+multiprocess and testing artifacts, and fails the build if another Glance version is present.
 
 ## License
 

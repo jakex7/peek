@@ -26,8 +26,9 @@ android {
 }
 
 dependencies {
-  implementation(project(":peek-appwidget"))
+  implementation(project(":peek-glance"))
   implementation(project(":peek-notification"))
+  implementation(libs.androidx.glance.appwidget.multiprocess)
   implementation(libs.androidx.core.ktx)
   implementation(libs.kotlinx.coroutines.android)
 }

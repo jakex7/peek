@@ -1,64 +1,70 @@
 package io.github.jakex7.peek.notification
 
 import android.content.Context
+import android.os.Bundle
 import androidx.compose.runtime.Composable
 import androidx.core.app.NotificationCompat
-import io.github.jakex7.peek.core.PeekComposable
-import io.github.jakex7.peek.remoteviews.PeekNotificationSize
-import io.github.jakex7.peek.remoteviews.PeekNotificationViews
-import io.github.jakex7.peek.remoteviews.PeekRemoteViews
 
 /**
- * Composes the collapsed/expanded/heads-up notification surfaces.
- *
- * Main-safe: composition runs off the calling thread. Call from a coroutine and pass the result to
- * [setPeekContent], or use the [setPeekContent] overload that takes the slot composables directly.
- * Surfaces are composed sequentially.
+ * Composes normal Glance content for every requested surface, then atomically attaches the complete
+ * set to this notification builder.
  */
-suspend fun peekNotificationViews(
+public suspend fun NotificationCompat.Builder.setPeekContent(
   context: Context,
-  collapsed: @Composable @PeekComposable () -> Unit,
-  expanded: (@Composable @PeekComposable () -> Unit)? = null,
-  headsUp: (@Composable @PeekComposable () -> Unit)? = null,
-): PeekNotificationViews =
-  PeekNotificationViews(
-    collapsed = PeekRemoteViews.render(context, PeekNotificationSize.Collapsed, collapsed),
-    expanded = expanded?.let {
-      PeekRemoteViews.render(context, PeekNotificationSize.Expanded, it)
-    },
-    headsUp = headsUp?.let {
-      PeekRemoteViews.render(context, PeekNotificationSize.HeadsUp, it)
-    },
-  )
-
-/**
- * Composes Peek [content] into the notification and attaches it.
- *
- * Main-safe: composition runs off the calling thread, so this may be called from a coroutine on the
- * main thread without blocking it.
- */
-suspend fun NotificationCompat.Builder.setPeekContent(
-  context: Context,
-  collapsed: @Composable @PeekComposable () -> Unit,
-  expanded: (@Composable @PeekComposable () -> Unit)? = null,
-  headsUp: (@Composable @PeekComposable () -> Unit)? = null,
+  collapsed: @Composable () -> Unit,
+  expanded: (@Composable () -> Unit)? = null,
+  headsUp: (@Composable () -> Unit)? = null,
+  state: Any? = null,
+  appWidgetOptions: Bundle = Bundle(),
+  sizes: PeekNotificationSizes = PeekNotificationSizes(),
   decorated: Boolean = true,
   ongoing: Boolean = true,
   actions: List<PeekNotificationAction> = emptyList(),
-): NotificationCompat.Builder =
-  setPeekContent(
-    views = peekNotificationViews(context, collapsed, expanded, headsUp),
-    decorated = decorated,
-    ongoing = ongoing,
-    actions = actions,
+): NotificationCompat.Builder {
+  val views = peekNotificationViews(
+    context = context,
+    collapsed = collapsed,
+    expanded = expanded,
+    headsUp = headsUp,
+    state = state,
+    appWidgetOptions = appWidgetOptions,
+    sizes = sizes,
   )
+  return setPeekContent(views, decorated, ongoing, actions)
+}
+
+internal suspend fun NotificationCompat.Builder.setPeekContent(
+  context: Context,
+  collapsed: @Composable () -> Unit,
+  expanded: (@Composable () -> Unit)? = null,
+  headsUp: (@Composable () -> Unit)? = null,
+  state: Any? = null,
+  appWidgetOptions: Bundle = Bundle(),
+  sizes: PeekNotificationSizes = PeekNotificationSizes(),
+  decorated: Boolean = true,
+  ongoing: Boolean = true,
+  actions: List<PeekNotificationAction> = emptyList(),
+  composer: NotificationComposer,
+): NotificationCompat.Builder {
+  val views = peekNotificationViews(
+    context = context,
+    collapsed = collapsed,
+    expanded = expanded,
+    headsUp = headsUp,
+    state = state,
+    appWidgetOptions = appWidgetOptions,
+    sizes = sizes,
+    composer = composer,
+  )
+  return setPeekContent(views, decorated, ongoing, actions)
+}
 
 /**
  * Attaches already-composed [views] to the notification.
  *
  * Synchronous; performs no composition. Build [views] with [peekNotificationViews] from a coroutine.
  */
-fun NotificationCompat.Builder.setPeekContent(
+public fun NotificationCompat.Builder.setPeekContent(
   views: PeekNotificationViews,
   decorated: Boolean = true,
   ongoing: Boolean = true,

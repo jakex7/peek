@@ -1,4 +1,6 @@
 pluginManagement {
+  includeBuild("peek-glance-gradle-plugin")
+
   repositories {
     google()
     mavenCentral()
@@ -9,6 +11,11 @@ pluginManagement {
 dependencyResolutionManagement {
   repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
   repositories {
+    mavenLocal {
+      content {
+        includeGroup("io.github.jakex7.peek.forks")
+      }
+    }
     google()
     mavenCentral()
   }
@@ -17,12 +24,8 @@ dependencyResolutionManagement {
 rootProject.name = "peek"
 
 include(
-  ":peek-core",
-  ":peek-runtime",
-  ":peek-remoteviews",
+  ":peek-glance",
   ":peek-notification",
-  ":peek-appwidget",
   ":peek-emittables",
-  ":peek-testing",
   ":sample",
 )

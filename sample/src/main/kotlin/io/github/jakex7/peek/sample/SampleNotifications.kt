@@ -9,29 +9,30 @@ import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import io.github.jakex7.peek.core.Alignment
-import io.github.jakex7.peek.core.Button
-import io.github.jakex7.peek.core.ColorProvider
-import io.github.jakex7.peek.core.Column
-import io.github.jakex7.peek.core.FontWeight
-import io.github.jakex7.peek.core.Image
-import io.github.jakex7.peek.core.ImageProvider
-import io.github.jakex7.peek.core.LinearProgressIndicator
-import io.github.jakex7.peek.core.PeekComposable
-import io.github.jakex7.peek.core.PeekModifier
-import io.github.jakex7.peek.core.Row
-import io.github.jakex7.peek.core.Spacer
-import io.github.jakex7.peek.core.Text
-import io.github.jakex7.peek.core.TextAlign
-import io.github.jakex7.peek.core.VerticalAlignment
-import io.github.jakex7.peek.core.actionSendBroadcast
-import io.github.jakex7.peek.core.background
-import io.github.jakex7.peek.core.fillMaxWidth
-import io.github.jakex7.peek.core.height
-import io.github.jakex7.peek.core.padding
-import io.github.jakex7.peek.core.width
+import androidx.glance.Button
+import androidx.glance.GlanceModifier
+import androidx.glance.Image
+import androidx.glance.ImageProvider
+import androidx.glance.appwidget.LinearProgressIndicator
+import androidx.glance.appwidget.action.actionSendBroadcast
+import androidx.glance.background
+import androidx.glance.layout.Alignment
+import androidx.glance.layout.Column
+import androidx.glance.layout.Row
+import androidx.glance.layout.Spacer
+import androidx.glance.layout.fillMaxWidth
+import androidx.glance.layout.height
+import androidx.glance.layout.padding
+import androidx.glance.layout.width
+import androidx.glance.text.FontWeight
+import androidx.glance.text.Text
+import androidx.glance.text.TextAlign
+import androidx.glance.text.TextStyle
+import androidx.glance.unit.ColorProvider
+import io.github.jakex7.peek.glance.CircularProgressIndicator
 import io.github.jakex7.peek.notification.setPeekContent
 import kotlin.math.roundToInt
 
@@ -44,91 +45,81 @@ internal object SampleNotifications {
   const val ExtraProgress = "io.github.jakex7.peek.sample.extra.PROGRESS"
 
   @SuppressLint("MissingPermission")
-  suspend fun postOngoingUpdate(
-    context: Context,
-    progress: Float,
-    paused: Boolean = false,
-  ) {
+  suspend fun postOngoingUpdate(context: Context, progress: Float, paused: Boolean = false) {
     val clampedProgress = progress.coerceIn(0f, 1f)
     val progressPercent = (clampedProgress * 100).roundToInt()
     val statusText = if (paused) "Backup paused" else "Uploading backup"
-    val notification =
-      NotificationCompat.Builder(context, ChannelId).setSmallIcon(R.drawable.ic_peek_notification)
-        .setContentTitle("Peek sample sync").setOnlyAlertOnce(true).setPeekContent(
-          context = context,
-          collapsed = {
+    val toggleAction = actionSendBroadcast(
+      Intent(context, SampleNotificationActionReceiver::class.java).apply {
+        action = ActionTogglePause
+        putExtra(ExtraProgress, clampedProgress)
+        putExtra(ExtraPaused, paused)
+      }
+    )
+
+    val notification = NotificationCompat.Builder(context, ChannelId)
+      .setSmallIcon(R.drawable.ic_peek_notification)
+      .setContentTitle("Peek sample sync")
+      .setOnlyAlertOnce(true)
+      .setPeekContent(
+        context = context,
+        collapsed = {
+          Row(verticalAlignment = Alignment.CenterVertically) {
+            CircularProgressIndicator(progress = clampedProgress)
+            Spacer(GlanceModifier.width(8.dp))
             Text(statusText, maxLines = 1)
-          },
-          expanded = {
-            Column(
-              modifier = PeekModifier.fillMaxWidth().padding(vertical = 12.dp)
-                .background(ColorProvider(Color.Red)),
-            ) {
-              Row(
-                modifier = PeekModifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-              ) {
-                Image(
-                  provider = ImageProvider(android.R.drawable.stat_sys_upload),
-                  contentDescription = null,
-                )
-                Spacer(modifier = PeekModifier.width(8.dp))
-                Text(statusText, maxLines = 1)
-              }
-              Spacer(modifier = PeekModifier.height(8.dp))
-              LinearProgressIndicator(
-                progress = clampedProgress,
-                modifier = PeekModifier.fillMaxWidth(),
-              )
-              Spacer(modifier = PeekModifier.height(8.dp))
-              Row(
-                modifier = PeekModifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-              ) {
-                Text("$progressPercent% complete", maxLines = 1)
-                Spacer(modifier = PeekModifier.width(8.dp))
-                Button(
-                  text = if (paused) "Resume" else "Pause",
-                  onClick = actionSendBroadcast(
-                    Intent(context, SampleNotificationActionReceiver::class.java).apply {
-                      action = ActionTogglePause
-                      putExtra(ExtraProgress, clampedProgress)
-                      putExtra(ExtraPaused, paused)
-                    },
-                  ),
-                )
-              }
+          }
+        },
+        expanded = {
+          Column(
+            modifier = GlanceModifier
+              .fillMaxWidth()
+              .background(ColorProvider(Color(0xfff8f7fc)))
+              .padding(12.dp),
+          ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+              Image(ImageProvider(android.R.drawable.stat_sys_upload), contentDescription = null)
+              Spacer(GlanceModifier.width(8.dp))
+              Text(statusText, maxLines = 1)
             }
-          },
-          headsUp = {
-            Text(
-              text = if (paused) "Backup is paused" else "Backup is still running",
-              modifier = PeekModifier.padding(12.dp),
-              maxLines = 1,
-            )
-          },
-        ).build()
+            Spacer(GlanceModifier.height(8.dp))
+            LinearProgressIndicator(clampedProgress, GlanceModifier.fillMaxWidth())
+            Spacer(GlanceModifier.height(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+              Text("$progressPercent% complete", maxLines = 1)
+              Spacer(GlanceModifier.width(8.dp))
+              Button(if (paused) "Resume" else "Pause", onClick = toggleAction)
+            }
+          }
+        },
+        headsUp = {
+          Text(
+            if (paused) "Backup is paused" else "Backup is still running",
+            modifier = GlanceModifier.padding(12.dp),
+            maxLines = 1,
+          )
+        },
+      )
+      .build()
 
     NotificationManagerCompat.from(context).notify(NotificationId, notification)
   }
 
   @SuppressLint("MissingPermission")
   suspend fun postMatchUpdate(context: Context) {
-    val notification =
-      NotificationCompat.Builder(context, ChannelId).setSmallIcon(R.drawable.ic_peek_notification)
-        .setContentTitle("Real Madrid 0 : 0 Barcelona").setContentText("12' live")
-        .setCategory(NotificationCompat.CATEGORY_EVENT).setOnlyAlertOnce(true).setPeekContent(
-          context = context,
-          collapsed = {
-            MatchCollapsedContent()
-          },
-          expanded = {
-            MatchScoreboardContent()
-          },
-          headsUp = {
-            MatchScoreboardContent()
-          },
-        ).build()
+    val notification = NotificationCompat.Builder(context, ChannelId)
+      .setSmallIcon(R.drawable.ic_peek_notification)
+      .setContentTitle("Poland 2 : 1 Albania")
+      .setContentText("73' live")
+      .setCategory(NotificationCompat.CATEGORY_EVENT)
+      .setOnlyAlertOnce(true)
+      .setPeekContent(
+        context = context,
+        collapsed = { MatchCollapsedContent() },
+        expanded = { MatchScoreboardContent() },
+        headsUp = { MatchScoreboardContent() },
+      )
+      .build()
 
     NotificationManagerCompat.from(context).notify(MatchNotificationId, notification)
   }
@@ -141,106 +132,59 @@ internal object SampleNotifications {
   }
 
   fun isOngoingNotificationActive(context: Context): Boolean =
-    context.getSystemService(NotificationManager::class.java).activeNotifications.any { it.id == NotificationId }
+    context.getSystemService(NotificationManager::class.java).activeNotifications.any {
+      it.id == NotificationId
+    }
 
   fun createNotificationChannel(context: Context) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
-    val channel = NotificationChannel(
-      ChannelId,
-      "Peek sample",
-      NotificationManager.IMPORTANCE_LOW,
-    ).apply {
-      description = "Ongoing notifications rendered with Peek."
-    }
+    val channel = NotificationChannel(ChannelId, "Peek sample", NotificationManager.IMPORTANCE_LOW)
+      .apply { description = "Notifications composed by official Glance through Peek." }
     context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
   }
 
   @Composable
-  @PeekComposable
   private fun MatchCollapsedContent() {
-    Row(
-      modifier = PeekModifier.fillMaxWidth(),
-      verticalAlignment = VerticalAlignment.CenterVertically
-    ) {
-      Text(
-        text = "🇵🇱 2 : 1 🇦🇱",
-        maxLines = 1,
-        fontSizeSp = 32,
-      )
-      Spacer(modifier = PeekModifier.width(32.dp))
-      Text(
-        text = "73'",
-        maxLines = 1,
-        color = ColorProvider(Color(0x88000000)),
-        fontWeight = FontWeight.Normal
-      )
+    Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+      Text("🇵🇱 2 : 1 🇦🇱", style = TextStyle(fontSize = 28.sp), maxLines = 1)
+      Spacer(GlanceModifier.width(24.dp))
+      Text("73'", style = TextStyle(color = MatchMinute), maxLines = 1)
     }
   }
 
   @Composable
-  @PeekComposable
   private fun MatchScoreboardContent() {
     Row(
-      modifier = PeekModifier.fillMaxWidth().padding(vertical = 12.dp),
+      modifier = GlanceModifier.fillMaxWidth().padding(vertical = 12.dp),
       verticalAlignment = Alignment.CenterVertically,
     ) {
-      TeamColumn(
-        name = "Poland",
-        flag = "🇵🇱"
-      )
-      Spacer(modifier = PeekModifier.width(16.dp))
-      Column(
-        modifier = PeekModifier.width(64.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-      ) {
+      TeamColumn("Poland", "🇵🇱")
+      Spacer(GlanceModifier.width(16.dp))
+      Column(GlanceModifier.width(64.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
-          text = "2 : 1",
-          fontSizeSp = 30,
+          "2 : 1",
+          style = TextStyle(fontSize = 30.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center),
           maxLines = 1,
-          textAlign = TextAlign.Center,
         )
-        Spacer(modifier = PeekModifier.height(2.dp))
         Text(
-          text = "73'",
-          color = MatchMinute,
-          fontSizeSp = 12,
+          "73'",
+          style = TextStyle(color = MatchMinute, fontSize = 12.sp, textAlign = TextAlign.Center),
           maxLines = 1,
-          textAlign = TextAlign.Center,
         )
       }
-      Spacer(modifier = PeekModifier.width(16.dp))
-      TeamColumn(
-        name = "Albania",
-        flag = "🇦🇱"
-      )
+      Spacer(GlanceModifier.width(16.dp))
+      TeamColumn("Albania", "🇦🇱")
     }
   }
 
   @Composable
-  @PeekComposable
-  private fun TeamColumn(
-    name: String,
-    flag: String
-  ) {
-    Column(
-      modifier = PeekModifier.width(70.dp),
-      horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-      Text(
-        text = flag,
-        fontSizeSp = 32,
-        maxLines = 1,
-        textAlign = TextAlign.Center,
-      )
-      Spacer(modifier = PeekModifier.height(4.dp))
-      Text(
-        text = name,
-        fontSizeSp = 12,
-        maxLines = 1,
-        textAlign = TextAlign.Center,
-      )
+  private fun TeamColumn(name: String, flag: String) {
+    Column(GlanceModifier.width(70.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+      Text(flag, style = TextStyle(fontSize = 28.sp, textAlign = TextAlign.Center), maxLines = 1)
+      Spacer(GlanceModifier.height(4.dp))
+      Text(name, style = TextStyle(fontSize = 12.sp, textAlign = TextAlign.Center), maxLines = 1)
     }
   }
 
-  private val MatchMinute = ColorProvider(Color(0xFF9D9D9D))
+  private val MatchMinute = ColorProvider(Color(0xff777777))
 }

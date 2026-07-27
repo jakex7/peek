@@ -3,6 +3,7 @@ import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import com.vanniktech.maven.publish.SonatypeHost
 
 plugins {
+  id("io.github.jakex7.peek.glance-fork")
   alias(libs.plugins.android.application) apply false
   alias(libs.plugins.android.library) apply false
   alias(libs.plugins.kotlin.compose) apply false
@@ -35,7 +36,7 @@ subprojects {
 
       pom {
         name = project.name
-        description = "Peek allows developers to build layouts for remote surfaces using a Jetpack Compose-style API."
+        description = "Peek extends Jetpack Glance with notification composition."
         inceptionYear = "2026"
         url = "https://github.com/jakex7/peek"
         licenses {

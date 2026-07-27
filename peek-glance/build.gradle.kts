@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-  namespace = "io.github.jakex7.peek.emittables"
+  namespace = "io.github.jakex7.peek.glance"
   compileSdk = libs.versions.compileSdk.get().toInt()
 
   defaultConfig {
@@ -19,25 +19,29 @@ android {
     targetCompatibility = JavaVersion.VERSION_17
   }
 
+  kotlinOptions {
+    jvmTarget = "17"
+  }
+
   testOptions {
     unitTests.isIncludeAndroidResources = true
   }
 
   lint {
-    // Direct tree producers deliberately operate on Glance's restricted emittable model.
+    // This module is the intentional implementation boundary for forked Glance/RemoteCompose
+    // translator internals. Application-facing APIs remain ordinary public Glance APIs.
     disable += "RestrictedApi"
-  }
-
-  kotlinOptions {
-    jvmTarget = "17"
   }
 }
 
 dependencies {
-  api(project(":peek-glance"))
-  api(libs.androidx.glance.appwidget.multiprocess)
+  api(libs.androidx.glance.appwidget)
+  implementation(libs.androidx.compose.remote.core)
+  implementation(libs.androidx.compose.remote.creation.core)
+  implementation(libs.androidx.compose.remote.creation)
+  implementation(libs.androidx.core.ktx)
 
-  testImplementation(libs.junit)
   testImplementation(libs.androidx.test.core)
+  testImplementation(libs.junit)
   testImplementation(libs.robolectric)
 }

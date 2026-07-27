@@ -28,10 +28,9 @@ android {
 }
 
 dependencies {
-  api(project(":peek-core"))
-  api(project(":peek-remoteviews"))
+  api(project(":peek-glance"))
   api(libs.androidx.core.ktx)
-  testImplementation(project(":peek-testing"))
+
   testImplementation(libs.junit)
   testImplementation(libs.androidx.test.core)
   testImplementation(libs.kotlinx.coroutines.core)

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Publishes all Peek library artifacts to the local Maven cache.
+# Builds the pinned Glance fork and publishes every Peek artifact locally.
 #
 # Usage:
 #   ./scripts/publish-local.sh
@@ -11,19 +11,58 @@ if [[ $# -ne 0 ]]; then
   exit 1
 fi
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PEEK_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ANDROIDX_SUPPORT_ROOT="$PEEK_ROOT/glance-fork/androidx"
+MAVEN_LOCAL_REPOSITORY="${PEEK_MAVEN_LOCAL_REPOSITORY:-$HOME/.m2/repository}"
+
+if ! git -C "$ANDROIDX_SUPPORT_ROOT" rev-parse --git-dir >/dev/null 2>&1; then
+  echo "Initializing the pinned AndroidX submodule..."
+  git -C "$PEEK_ROOT" submodule update --init --depth=1 -- glance-fork/androidx
+fi
+
+if [[ ! -x "$ANDROIDX_SUPPORT_ROOT/gradlew" ]]; then
+  echo "AndroidX submodule is incomplete at: $ANDROIDX_SUPPORT_ROOT" >&2
+  echo "Run: git submodule update --init --depth=1 glance-fork/androidx" >&2
+  exit 1
+fi
+
+echo ""
+echo "Publishing the pinned Glance AppWidget fork..."
+echo ""
+
+(
+  cd "$ANDROIDX_SUPPORT_ROOT"
+  env -u SNAPSHOT \
+    ALLOW_MISSING_PROJECTS=1 \
+    ALLOW_PUBLIC_REPOS=1 \
+    PROJECT_PREFIX=:glance \
+    ./gradlew \
+    :glance:glance-appwidget:publishToMavenLocal \
+    -Pandroidx.validateProjectStructure=false \
+    -Dmaven.repo.local="$MAVEN_LOCAL_REPOSITORY"
+)
+
+echo ""
+echo "Publishing the Peek Glance resolver plugin..."
+echo ""
+
+"$PEEK_ROOT/gradlew" \
+  -p "$PEEK_ROOT/peek-glance-gradle-plugin" \
+  publishToMavenLocal \
+  -Dmaven.repo.local="$MAVEN_LOCAL_REPOSITORY"
+
 echo ""
 echo "Publishing Peek libraries to local Maven..."
 echo ""
 
-./gradlew \
-  :peek-core:publishToMavenLocal \
-  :peek-runtime:publishToMavenLocal \
-  :peek-remoteviews:publishToMavenLocal \
+"$PEEK_ROOT/gradlew" \
+  -p "$PEEK_ROOT" \
+  :peek-glance:publishToMavenLocal \
   :peek-notification:publishToMavenLocal \
-  :peek-appwidget:publishToMavenLocal \
   :peek-emittables:publishToMavenLocal \
-  :peek-testing:publishToMavenLocal \
+  -Dmaven.repo.local="$MAVEN_LOCAL_REPOSITORY" \
   --no-configuration-cache
 
 echo ""
-echo "Done. Artifacts published to ~/.m2/repository/io/github/jakex7/peek/"
+echo "Done. Peek artifacts and the Glance fork were published to $MAVEN_LOCAL_REPOSITORY."
