@@ -1,24 +1,20 @@
 # Peek Glance AppWidget fork
 
-Peek uses the released Glance `1.3.0-alpha02` dependency graph and replaces only
+Peek uses the released Glance `1.2.0-rc01` dependency graph and replaces only
 `androidx.glance:glance-appwidget` with this artifact:
 
 ```text
-io.github.jakex7.peek.forks:glance-appwidget:1.3.0-alpha02
+io.github.jakex7.peek.forks:glance-appwidget:1.2.0-rc01
 ```
 
-The fork adds four internal translation hooks:
+The fork adds two internal translation hooks:
 
 - custom emittable to `RemoteViews`
 - custom `GlanceModifier` to `RemoteViews`
-- custom emittable to Remote Compose
-- custom `GlanceModifier` to Remote Compose
 
 Everything else remains the official AndroidX implementation, including state,
 previews, testing, multiprocess widgets, and the public
-`GlanceRemoteViews.compose()` notification entry point. The published fork keeps
-Remote Compose pinned to the same released `1.0.0-alpha14` version as Glance
-`1.3.0-alpha02`.
+`GlanceRemoteViews.compose()` notification entry point.
 
 ## Source and rebuilding
 
@@ -36,9 +32,9 @@ Then run:
 ./scripts/publish-local.sh
 ```
 
-The script initializes the submodule when needed. The fork uses an installed Android SDK and lets
-Gradle provision its declared JDK 21 toolchain. It downloads the pinned Gradle distribution and
-build dependencies from public repositories, so no AOSP `repo` checkout or prebuilts directory is
+The script initializes the submodule when needed. The fork uses an installed Android SDK and JDK
+21 from `JAVA_HOME` or `ANDROIDX_JDK21`. It downloads the pinned Gradle distribution and build
+dependencies from public repositories, so no AOSP `repo` checkout or prebuilts directory is
 required. The script publishes the fork, resolver plugin, and Peek libraries to Maven local. Set
 `PEEK_MAVEN_LOCAL_REPOSITORY` to override the default `$HOME/.m2/repository` destination.
 
@@ -55,8 +51,8 @@ plugins {
 }
 
 dependencies {
-  implementation("androidx.glance:glance-appwidget:1.3.0-alpha02")
-  implementation("androidx.glance:glance-appwidget-multiprocess:1.3.0-alpha02")
+  implementation("androidx.glance:glance-appwidget:1.2.0-rc01")
+  implementation("androidx.glance:glance-appwidget-multiprocess:1.2.0-rc01")
 }
 ```
 

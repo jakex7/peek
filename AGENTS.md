@@ -6,21 +6,18 @@
   previews, testing, sizing, or multiprocess support.
 - Implement notification `RemoteViews` through Glance's experimental public
   `GlanceRemoteViews.compose()` API.
-- Keep custom components extensible across both RemoteViews and RemoteCompose translation. Follow
-  the existing circular progress indicator implementation when adding components or modifiers.
+- Keep custom components extensible across RemoteViews translation. Follow the existing circular
+  progress indicator implementation when adding components or modifiers.
 - Keep `peek-emittables` available to non-Expo consumers. Expo Widgets may insert official Glance
   emittable trees directly, but Peek must work without Expo.
 - Backwards compatibility with the removed Peek runtime is not required.
 
 ## Dependency Pins
 
-- Keep Glance pinned exactly to `1.3.0-alpha02`.
+- Keep Glance pinned exactly to `1.2.0-rc01`.
 - The fork coordinate is
-  `io.github.jakex7.peek.forks:glance-appwidget:1.3.0-alpha02`; only its Maven group differs from
+  `io.github.jakex7.peek.forks:glance-appwidget:1.2.0-rc01`; only its Maven group differs from
   official Glance.
-- Keep RemoteCompose pinned to `1.0.0-alpha14`. Although the AndroidX source tree declares
-  `1.0.0-alpha16`, its external Maven artifacts are not published, so standalone consumers cannot
-  resolve it.
 - Do not change `compileSdk`, `targetSdk`, `minSdk`, or AGP merely to work around fork publication
   metadata. Ask before changing these versions.
 
@@ -34,19 +31,16 @@
    Peek.
 3. In the fork's `libraryversions.toml`, set `GLANCE` to the released version and keep
    `PEEK_GLANCE_APPWIDGET` referencing `versions.GLANCE`; do not introduce a separate fork version.
-4. Determine the matching RemoteCompose version from the release and verify that `remote-core`,
-   `remote-creation-core`, and `remote-creation` are available from public Maven repositories. A
-   successful AndroidX source build is insufficient because it substitutes local source projects.
-5. Update `androidx-glance` and `androidx-compose-remote` in `gradle/libs.versions.toml`, plus
+4. Update `androidx-glance` in `gradle/libs.versions.toml`, plus
    `supportedGlanceVersion` in `PeekGlanceForkCoordinates`. `forkVersion` must continue deriving
    from `supportedGlanceVersion`.
-6. Search for the old Glance and RemoteCompose versions and update current documentation, the
+5. Search for the old Glance version and update current documentation, the
    standalone-consumer fixture and its resolution assertions, and the equivalent Expo resolver.
    Never commit the Expo changes.
-7. Publish the new fork coordinate, run the verification commands below, and resolve the standalone
+6. Publish the new fork coordinate, run the verification commands below, and resolve the standalone
    consumer's `debugRuntimeClasspath` with `--refresh-dependencies` to prove all transitive artifacts
    exist outside the AndroidX checkout.
-8. Commit and publish the fork first, then update the parent repository's submodule pointer to that
+7. Commit and publish the fork first, then update the parent repository's submodule pointer to that
    exact commit.
 
 ## Glance Fork
@@ -68,7 +62,7 @@
 - Publish the fork, resolver plugin, and Peek artifacts with `./scripts/publish-local.sh`.
 - Test the resolver plugin with `./gradlew -p peek-glance-gradle-plugin test`.
 - Verify standalone resolution with
-  `./gradlew -p integration-tests/standalone-consumer compileDebugKotlin verifyStandaloneResolution`.
+  `./gradlew -p integration-tests/standalone-consumer assembleDebug verifyStandaloneResolution`.
 - After a dependency bump, force external transitive resolution with
   `./gradlew -p integration-tests/standalone-consumer dependencies --configuration debugRuntimeClasspath --refresh-dependencies`.
 - Compile the remaining libraries with

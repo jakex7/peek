@@ -18,7 +18,7 @@ import androidx.glance.appwidget.provideContent
 /**
  * Official multiprocess Glance AppWidget whose content is supplied as a direct emittable tree.
  *
- * State, sizing, previews, sessions, testing and RemoteCompose selection remain owned by Glance.
+ * State, sizing, previews, sessions, and testing remain owned by Glance.
  */
 public abstract class PeekEmittableAppWidget(
   @LayoutRes errorUiLayout: Int = GlanceAppWidgetR.layout.glance_error_layout,

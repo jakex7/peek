@@ -8,7 +8,7 @@ fixture:
 
 ```shell
 ./scripts/publish-local.sh
-./gradlew -p integration-tests/standalone-consumer compileDebugKotlin verifyStandaloneResolution
+./gradlew -p integration-tests/standalone-consumer assembleDebug verifyStandaloneResolution
 ```
 
 `verifyStandaloneResolution` asserts that the published resolver replaces official

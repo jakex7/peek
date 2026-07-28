@@ -1,7 +1,7 @@
 # Peek
 
 Peek supplies the Glance pieces AndroidX does not yet provide: notification composition and
-extensible custom components that translate to both RemoteViews and RemoteCompose.
+extensible custom components translated to RemoteViews.
 
 ## Modules
 
@@ -12,7 +12,7 @@ extensible custom components that translate to both RemoteViews and RemoteCompos
 
 ## Glance fork resolver
 
-Peek `0.2.0` is pinned to Glance `1.3.0-alpha02`. Apply the resolver plugin once in the consuming
+Peek `0.2.0` is pinned to Glance `1.2.0-rc01`. Apply the resolver plugin once in the consuming
 Android project:
 
 ```kotlin
@@ -31,7 +31,7 @@ dependencies {
 
 Continue declaring normal `androidx.glance` dependencies. The plugin substitutes only
 `glance-appwidget` with
-`io.github.jakex7.peek.forks:glance-appwidget:1.3.0-alpha02`, including transitive requests from
+`io.github.jakex7.peek.forks:glance-appwidget:1.2.0-rc01`, including transitive requests from
 multiprocess and testing artifacts, and fails the build if another Glance version is present.
 
 ## License

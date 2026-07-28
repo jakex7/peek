@@ -15,9 +15,6 @@ import androidx.glance.Emittable
 import androidx.glance.GlanceModifier
 import androidx.glance.appwidget.ProgressIndicatorDefaults
 import androidx.glance.appwidget.RemoteViewsTranslatable
-import androidx.glance.appwidget.remotecompose.RemoteComposeTranslatable
-import androidx.glance.appwidget.remotecompose.TranslationContext
-import androidx.glance.appwidget.remotecompose.components.RcElement
 import androidx.glance.unit.ColorProvider
 import kotlin.math.roundToInt
 
@@ -26,8 +23,7 @@ public interface PeekGlanceEmittable : Emittable
 
 internal class EmittableDeterminateCircularProgressIndicator :
   PeekGlanceEmittable,
-  RemoteViewsTranslatable,
-  RemoteComposeTranslatable {
+  RemoteViewsTranslatable {
 
   override var modifier: GlanceModifier = GlanceModifier
   public var progress: Float = 0f
@@ -55,9 +51,6 @@ internal class EmittableDeterminateCircularProgressIndicator :
         )
       }
     }
-
-  override fun translateRemoteCompose(translationContext: TranslationContext): RcElement =
-    RcDeterminateCircularProgressIndicator(this, translationContext)
 
   override fun copy(): Emittable =
     EmittableDeterminateCircularProgressIndicator().also {

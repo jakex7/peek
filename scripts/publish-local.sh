@@ -15,6 +15,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PEEK_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 ANDROIDX_SUPPORT_ROOT="$PEEK_ROOT/glance-fork/androidx"
 MAVEN_LOCAL_REPOSITORY="${PEEK_MAVEN_LOCAL_REPOSITORY:-$HOME/.m2/repository}"
+ANDROIDX_JDK21="${ANDROIDX_JDK21:-${JAVA_HOME:-}}"
+
+if [[ ! -x "$ANDROIDX_JDK21/bin/java" ]]; then
+  echo "Set JAVA_HOME or ANDROIDX_JDK21 to a JDK 21 installation." >&2
+  exit 1
+fi
 
 if ! git -C "$ANDROIDX_SUPPORT_ROOT" rev-parse --git-dir >/dev/null 2>&1; then
   echo "Initializing the pinned AndroidX submodule..."
@@ -34,6 +40,7 @@ echo ""
 (
   cd "$ANDROIDX_SUPPORT_ROOT"
   env -u SNAPSHOT \
+    ANDROIDX_JDK21="$ANDROIDX_JDK21" \
     ALLOW_MISSING_PROJECTS=1 \
     ALLOW_PUBLIC_REPOS=1 \
     PROJECT_PREFIX=:glance \

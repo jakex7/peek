@@ -28,17 +28,14 @@ android {
   }
 
   lint {
-    // This module is the intentional implementation boundary for forked Glance/RemoteCompose
-    // translator internals. Application-facing APIs remain ordinary public Glance APIs.
+    // This module is the intentional implementation boundary for forked Glance translator
+    // internals. Application-facing APIs remain ordinary public Glance APIs.
     disable += "RestrictedApi"
   }
 }
 
 dependencies {
   api(libs.androidx.glance.appwidget)
-  implementation(libs.androidx.compose.remote.core)
-  implementation(libs.androidx.compose.remote.creation.core)
-  implementation(libs.androidx.compose.remote.creation)
   implementation(libs.androidx.core.ktx)
 
   testImplementation(libs.androidx.test.core)

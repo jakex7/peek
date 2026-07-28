@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   checks:
-    name: Gradle checks
+    name: Fork-free checks
     runs-on: ubuntu-latest
 
     steps:
@@ -25,5 +25,5 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Run checks
-        run: ./gradlew testDebugUnitTest assembleDebug
+      - name: Test resolver plugin
+        run: ./gradlew -p peek-glance-gradle-plugin test
