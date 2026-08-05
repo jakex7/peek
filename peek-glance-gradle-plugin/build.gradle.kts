@@ -1,3 +1,6 @@
+import com.vanniktech.maven.publish.GradlePlugin
+import com.vanniktech.maven.publish.JavadocJar
+import com.vanniktech.maven.publish.SonatypeHost
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -5,6 +8,7 @@ plugins {
   `java-gradle-plugin`
   `kotlin-dsl`
   `maven-publish`
+  alias(libs.plugins.vanniktech.mavenPublish)
 }
 
 java {
@@ -19,7 +23,7 @@ tasks.withType<KotlinCompile> {
 }
 
 group = "io.github.jakex7.peek"
-version = "0.2.0"
+version = libs.versions.peek.get()
 
 repositories {
   mavenCentral()
@@ -32,6 +36,47 @@ gradlePlugin {
       implementationClass = "io.github.jakex7.peek.gradle.PeekGlanceForkPlugin"
       displayName = "Peek Glance fork resolver"
       description = "Selects and validates the Glance AppWidget fork required by Peek extensions."
+    }
+  }
+}
+
+mavenPublishing {
+  configure(
+    GradlePlugin(
+      javadocJar = JavadocJar.None(),
+      sourcesJar = true,
+    )
+  )
+
+  publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL, automaticRelease = true)
+
+  if (project.findProperty("signingInMemoryKey") != null) {
+    signAllPublications()
+  }
+
+  pom {
+    name = "Peek Glance fork resolver"
+    description = "Selects the Peek AppWidget fork for supported AndroidX Glance dependencies."
+    inceptionYear = "2026"
+    url = "https://github.com/jakex7/peek"
+    licenses {
+      license {
+        name = "The MIT License"
+        url = "https://opensource.org/license/mit"
+        distribution = "https://opensource.org/license/mit"
+      }
+    }
+    developers {
+      developer {
+        id = "jakex7"
+        name = "Jakub Grzywacz"
+        url = "https://github.com/jakex7"
+      }
+    }
+    scm {
+      url = "https://github.com/jakex7/peek"
+      connection = "scm:git:git://github.com/jakex7/peek.git"
+      developerConnection = "scm:git:ssh://git@github.com/jakex7/peek.git"
     }
   }
 }
