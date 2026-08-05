@@ -15,9 +15,8 @@
 ## Dependency Pins
 
 - Keep Glance pinned exactly to `1.2.0-rc01`.
-- The fork coordinate is
-  `io.github.jakex7.peek.forks:glance-appwidget:1.2.0-rc01`; only its Maven group differs from
-  official Glance.
+- The fork coordinate combines the original Glance version with the Peek version:
+  `io.github.jakex7.peek.forks:glance-appwidget:1.2.0-rc01-peek-0.2.0`.
 - Do not change `compileSdk`, `targetSdk`, `minSdk`, or AGP merely to work around fork publication
   metadata. Ask before changing these versions.
 
@@ -30,10 +29,11 @@
    upstream translator API changes in the fork rather than copying Glance implementations into
    Peek.
 3. In the fork's `libraryversions.toml`, set `GLANCE` to the released version and keep
-   `PEEK_GLANCE_APPWIDGET` referencing `versions.GLANCE`; do not introduce a separate fork version.
-4. Update `androidx-glance` in `gradle/libs.versions.toml`, plus
+   `PEEK_GLANCE_APPWIDGET` referencing `versions.GLANCE`. The standalone publisher assigns the
+   combined public fork version without relabeling the AndroidX dependency graph.
+4. Update `androidx-glance` in `gradle/libs.versions.toml`, plus `peekVersion` and
    `supportedGlanceVersion` in `PeekGlanceForkCoordinates`. `forkVersion` must continue deriving
-   from `supportedGlanceVersion`.
+   from both versions.
 5. Search for the old Glance version and update current documentation, the
    standalone-consumer fixture and its resolution assertions, and the equivalent Expo resolver.
    Never commit the Expo changes.

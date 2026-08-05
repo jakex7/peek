@@ -4,7 +4,7 @@ Peek uses the released Glance `1.2.0-rc01` dependency graph and replaces only
 `androidx.glance:glance-appwidget` with this artifact:
 
 ```text
-io.github.jakex7.peek.forks:glance-appwidget:1.2.0-rc01
+io.github.jakex7.peek.forks:glance-appwidget:1.2.0-rc01-peek-0.2.0
 ```
 
 The fork adds two internal translation hooks:

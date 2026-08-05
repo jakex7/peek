@@ -31,8 +31,8 @@ dependencies {
 
 Continue declaring normal `androidx.glance` dependencies. The plugin substitutes only
 `glance-appwidget` with
-`io.github.jakex7.peek.forks:glance-appwidget:1.2.0-rc01`, including transitive requests from
-multiprocess and testing artifacts, and fails the build if another Glance version is present.
+`io.github.jakex7.peek.forks:glance-appwidget:1.2.0-rc01-peek-0.2.0`, including transitive requests
+from multiprocess and testing artifacts, and fails the build if another Glance version is present.
 
 ## License
 

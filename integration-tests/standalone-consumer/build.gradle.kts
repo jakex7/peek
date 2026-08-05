@@ -39,7 +39,9 @@ tasks.register("verifyStandaloneResolution") {
             .allComponents
             .map { it.id.displayName }
 
-        check("io.github.jakex7.peek.forks:glance-appwidget:1.2.0-rc01" in componentIds) {
+        val expectedFork =
+            "io.github.jakex7.peek.forks:glance-appwidget:1.2.0-rc01-peek-0.2.0"
+        check(expectedFork in componentIds) {
             "The Peek Glance fork was not selected: $componentIds"
         }
         check("androidx.glance:glance-appwidget:1.2.0-rc01" !in componentIds) {

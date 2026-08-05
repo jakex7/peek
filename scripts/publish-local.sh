@@ -45,10 +45,17 @@ echo ""
     ALLOW_PUBLIC_REPOS=1 \
     PROJECT_PREFIX=:glance \
     ./gradlew \
-    :glance:glance-appwidget:publishToMavenLocal \
-    -Pandroidx.validateProjectStructure=false \
-    -Dmaven.repo.local="$MAVEN_LOCAL_REPOSITORY"
+    :glance:glance-appwidget:bundleReleaseAar \
+    :glance:glance-appwidget:sourceJarRelease \
+    :glance:glance-appwidget:generatePomFileForMavenPublication \
+    -Pandroidx.validateProjectStructure=false
 )
+
+"$PEEK_ROOT/gradlew" \
+  -p "$PEEK_ROOT/glance-fork/publisher" \
+  publishToMavenLocal \
+  -Dmaven.repo.local="$MAVEN_LOCAL_REPOSITORY" \
+  --no-configuration-cache
 
 echo ""
 echo "Publishing the Peek Glance resolver plugin..."
