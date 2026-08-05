@@ -43,7 +43,7 @@ gradlePlugin {
 mavenPublishing {
   configure(
     GradlePlugin(
-      javadocJar = JavadocJar.None(),
+      javadocJar = JavadocJar.Empty(),
       sourcesJar = true,
     )
   )
