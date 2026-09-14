@@ -1,10 +1,10 @@
 # Peek Glance AppWidget fork
 
-Peek uses the released Glance `1.2.0-rc01` dependency graph and replaces only
+Peek uses the released Glance `1.2.0` dependency graph and replaces only
 `androidx.glance:glance-appwidget` with this artifact:
 
 ```text
-io.github.jakex7.peek.forks:glance-appwidget:1.2.0-rc01-peek-0.2.0
+io.github.jakex7.peek.forks:glance-appwidget:1.2.0-peek-0.3.0
 ```
 
 The fork adds two internal translation hooks:
@@ -47,12 +47,12 @@ Consumers apply the project plugin and keep declaring official Glance modules:
 
 ```kotlin
 plugins {
-  id("io.github.jakex7.peek.glance-fork") version "0.2.0"
+  id("io.github.jakex7.peek.glance-fork") version "0.3.0"
 }
 
 dependencies {
-  implementation("androidx.glance:glance-appwidget:1.2.0-rc01")
-  implementation("androidx.glance:glance-appwidget-multiprocess:1.2.0-rc01")
+  implementation("androidx.glance:glance-appwidget:1.2.0")
+  implementation("androidx.glance:glance-appwidget-multiprocess:1.2.0")
 }
 ```
 

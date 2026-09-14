@@ -14,9 +14,9 @@
 
 ## Dependency Pins
 
-- Keep Glance pinned exactly to `1.2.0-rc01`.
+- Keep Glance pinned exactly to `1.2.0`.
 - The fork coordinate combines the original Glance version with the Peek version:
-  `io.github.jakex7.peek.forks:glance-appwidget:1.2.0-rc01-peek-0.2.0`.
+  `io.github.jakex7.peek.forks:glance-appwidget:1.2.0-peek-0.3.0`.
 - Do not change `compileSdk`, `targetSdk`, `minSdk`, or AGP merely to work around fork publication
   metadata. Ask before changing these versions.
 
