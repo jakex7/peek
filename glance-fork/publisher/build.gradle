@@ -6,8 +6,8 @@ plugins {
 }
 
 group = "io.github.jakex7.peek.forks"
-def upstreamVersion = "1.2.0-rc01"
-def peekVersion = "0.2.0"
+def upstreamVersion = "1.2.0"
+def peekVersion = "0.3.0"
 version = "${upstreamVersion}-peek-${peekVersion}"
 
 def forkArtifactId = "glance-appwidget"

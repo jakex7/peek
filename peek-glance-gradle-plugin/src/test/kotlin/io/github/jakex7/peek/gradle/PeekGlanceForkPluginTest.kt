@@ -81,7 +81,7 @@ class PeekGlanceForkPluginTest {
     val projectDir = createProject()
     writeBuild(
       projectDir,
-      "implementation(\"${PeekGlanceForkCoordinates.officialGroup}:glance:1.2.0\")",
+      "implementation(\"${PeekGlanceForkCoordinates.officialGroup}:glance:9.9.9\")",
     )
 
     val result =
@@ -94,7 +94,7 @@ class PeekGlanceForkPluginTest {
       "Peek requires every androidx.glance module to use " +
         PeekGlanceForkCoordinates.supportedGlanceVersion,
     )
-    assertContains(result.output, "androidx.glance:glance:1.2.0")
+    assertContains(result.output, "androidx.glance:glance:9.9.9")
   }
 
   private fun createProject(): File {
