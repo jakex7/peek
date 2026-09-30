@@ -7,17 +7,17 @@ extensible custom components translated to RemoteViews.
 
 - `peek-glance` provides custom Glance components.
 - `peek-notification` composes Glance content into `NotificationCompat` custom views.
-- `peek-emittables` inserts prebuilt Glance emittable trees and provides a multiprocess AppWidget
-  adapter for low-level tree producers.
+- `peek-emittables` inserts prebuilt Glance emittable trees, provides a multiprocess AppWidget
+  adapter for low-level tree producers, and composes such trees into notification views.
 
 ## Glance fork resolver
 
-Peek `0.3.0` is pinned to Glance `1.2.0`. Apply the resolver plugin once in the consuming
+Peek `0.3.1` is pinned to Glance `1.2.0`. Apply the resolver plugin once in the consuming
 Android project:
 
 ```kotlin
 plugins {
-  id("io.github.jakex7.peek.glance-fork") version "0.3.0"
+  id("io.github.jakex7.peek.glance-fork") version "0.3.1"
 }
 ```
 
@@ -25,14 +25,32 @@ Then add Peek dependency:
 
 ```kotlin
 dependencies {
-  implementation("io.github.jakex7.peek:peek-notification:0.3.0")
+  implementation("io.github.jakex7.peek:peek-notification:0.3.1")
 }
 ```
 
 Continue declaring normal `androidx.glance` dependencies. The plugin substitutes only
 `glance-appwidget` with
-`io.github.jakex7.peek.forks:glance-appwidget:1.2.0-peek-0.3.0`, including transitive requests
+`io.github.jakex7.peek.forks:glance-appwidget:1.2.0-peek-0.3.1`, including transitive requests
 from multiprocess and testing artifacts, and fails the build if another Glance version is present.
+
+## Notifications from emittable trees
+
+Tree producers that already hold Glance `Emittable` trees can skip composable content:
+
+```kotlin
+val views = peekEmittableNotificationViews(
+  context = context,
+  collapsed = collapsedRoot,
+  expanded = expandedRoot,
+)
+NotificationCompat.Builder(context, channelId)
+  .setSmallIcon(R.drawable.ic_notification)
+  .setPeekContent(views)
+```
+
+`setPeekEmittableContent` composes and attaches in one call. Both live in `peek-emittables`, which
+depends on `peek-notification`.
 
 ## License
 

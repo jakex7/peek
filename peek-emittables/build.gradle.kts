@@ -35,6 +35,7 @@ android {
 
 dependencies {
   api(project(":peek-glance"))
+  api(project(":peek-notification"))
   api(libs.androidx.glance.appwidget.multiprocess)
 
   testImplementation(libs.junit)

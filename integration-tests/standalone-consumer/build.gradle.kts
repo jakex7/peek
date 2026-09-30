@@ -2,7 +2,7 @@ plugins {
     id("com.android.library") version "8.12.0"
     id("org.jetbrains.kotlin.android") version "2.1.20"
     id("org.jetbrains.kotlin.plugin.compose") version "2.1.20"
-    id("io.github.jakex7.peek.glance-fork") version "0.3.0"
+    id("io.github.jakex7.peek.glance-fork") version "0.3.1"
 }
 
 android {
@@ -24,7 +24,7 @@ android {
 }
 
 dependencies {
-    implementation("io.github.jakex7.peek:peek-notification:0.3.0")
+    implementation("io.github.jakex7.peek:peek-notification:0.3.1")
     implementation("androidx.glance:glance-appwidget-multiprocess:1.2.0")
 }
 
@@ -40,7 +40,7 @@ tasks.register("verifyStandaloneResolution") {
             .map { it.id.displayName }
 
         val expectedFork =
-            "io.github.jakex7.peek.forks:glance-appwidget:1.2.0-peek-0.3.0"
+            "io.github.jakex7.peek.forks:glance-appwidget:1.2.0-peek-0.3.1"
         check(expectedFork in componentIds) {
             "The Peek Glance fork was not selected: $componentIds"
         }

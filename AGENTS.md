@@ -10,13 +10,16 @@
   progress indicator implementation when adding components or modifiers.
 - Keep `peek-emittables` available to non-Expo consumers. Expo Widgets may insert official Glance
   emittable trees directly, but Peek must work without Expo.
+- `peek-emittables` is the entry point for tree producers. Notification composition from emittables
+  (`peekEmittableNotificationViews`, `setPeekEmittableContent`) lives there and delegates to
+  `peek-notification`, so producers never write composable content.
 - Backwards compatibility with the removed Peek runtime is not required.
 
 ## Dependency Pins
 
 - Keep Glance pinned exactly to `1.2.0`.
 - The fork coordinate combines the original Glance version with the Peek version:
-  `io.github.jakex7.peek.forks:glance-appwidget:1.2.0-peek-0.3.0`.
+  `io.github.jakex7.peek.forks:glance-appwidget:1.2.0-peek-0.3.1`.
 - Do not change `compileSdk`, `targetSdk`, `minSdk`, or AGP merely to work around fork publication
   metadata. Ask before changing these versions.
 
